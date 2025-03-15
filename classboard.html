@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>课程和考试日程表</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    
+    .calendar-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .week-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    
+    .calendar-cell {
+      border: 1px solid #ccc;
+      min-height: 100px;
+      padding: 5px;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .calendar-cell.selected {
+      background-color: #e6f3ff;
+    }
+    
+    .date-label {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .event {
+      margin-top: 25px;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+    
+    .homework {
+      color: blue;
+    }
+    
+    .exam {
+      color: red;
+    }
+    
+    .controls {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <div class="calendar-container">
+    <div class="week-header">
+      <div>日</div>
+      <div>一</div>
+      <div>二</div>
+      <div>三</div>
+      <div>四</div>
+      <div>五</div>
+      <div>六</div>
+    </div>
+    <div id="currentWeek" class="calendar-grid"></div>
+    <div id="nextWeek" class="calendar-grid"></div>
+  </div>
+  
+  <div class="controls">
+    <button onclick="showEventModal()">新增</button>
+  </div>
+  
+  <div id="eventModal" class="modal">
+    <h3>新增事件</h3>
+    <div>
+      <button onclick="selectEventType('homework')">功課</button>
+      <button onclick="selectEventType('exam')">考試</button>
+    </div>
+    <div id="contentInput" style="display: none; margin-top: 10px;">
+      <input type="text" id="eventContent" placeholder="請輸入內容">
+      <button onclick="saveEvent()">確定</button>
+      <button onclick="closeModal()">取消</button>
+    </div>
+  </div>
+  
+  <div id="overlay" class="overlay"></div>
+
+  <script>
+    let selectedDate = null;
+    let selectedCell = null;
+    let selectedType = null;
+    let events = [];
+    
+    function initializeCalendar() {
+      const today = new Date();
+      updateCalendarGrid(today);
+      loadEvents();
+    }
+    
+    function updateCalendarGrid(startDate) {
+      const currentWeekGrid = document.getElementById('currentWeek');
+      const nextWeekGrid = document.getElementById('nextWeek');
+      
+      currentWeekGrid.innerHTML = '';
+      nextWeekGrid.innerHTML = '';
+      
+      // 找到本周的周日
+      const currentSunday = new Date(startDate);
+      currentSunday.setDate(currentSunday.getDate() - currentSunday.getDay());
+      
+      // 生成本周和下周的日历格子
+      fillWeekGrid(currentWeekGrid, currentSunday);
+      
+      const nextSunday = new Date(currentSunday);
+      nextSunday.setDate(nextSunday.getDate() + 7);
+      fillWeekGrid(nextWeekGrid, nextSunday);
+      
+      // 检查是否需要更新日历
+      checkAndUpdateCalendar();
+    }
+    
+    function fillWeekGrid(grid, startDate) {
+      for (let i = 0; i < 7; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        
+        const currentDate = new Date(startDate);
+        currentDate.setDate(startDate.getDate() + i);
+        
+        const dateLabel = document.createElement('div');
+        dateLabel.className = 'date-label';
+        dateLabel.textContent = `${currentDate.getMonth() + 1}/${currentDate.getDate()}`;
+        
+        cell.appendChild(dateLabel);
+        cell.setAttribute('data-date', currentDate.toISOString().split('T')[0]);
+        
+        cell.addEventListener('click', () => selectCell(cell));
+        
+        grid.appendChild(cell);
+      }
+    }
+    
+    function selectCell(cell) {
+      if (selectedCell) {
+        selectedCell.classList.remove('selected');
+      }
+      cell.classList.add('selected');
+      selectedCell = cell;
+      selectedDate = cell.getAttribute('data-date');
+    }
+    
+    function showEventModal() {
+      if (!selectedDate) {
+        alert('請先選擇一個日期');
+        return;
+      }
+      
+      document.getElementById('eventModal').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+      document.getElementById('contentInput').style.display = 'none';
+      document.getElementById('eventContent').value = '';
+      selectedType = null;
+    }
+    
+    function selectEventType(type) {
+      selectedType = type;
+      document.getElementById('contentInput').style.display = 'block';
+    }
+    
+    function closeModal() {
+      document.getElementById('eventModal').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+    
+    function saveEvent() {
+      const content = document.getElementById('eventContent').value;
+      if (!content) {
+        alert('請輸入內容');
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(updateEvents)
+        .addEvent(selectedDate, content, selectedType);
+      
+      closeModal();
+    }
+    
+    function loadEvents() {
+      google.script.run
+        .withSuccessHandler(updateEvents)
+        .getEvents();
+    }
+    
+    function updateEvents(newEvents) {
+      events = newEvents;
+      displayEvents();
+    }
+    
+    function displayEvents() {
+      // 清除所有现有事件
+      document.querySelectorAll('.event').forEach(el => el.remove());
+      
+      // 显示事件
+      events.forEach(event => {
+        const cell = document.querySelector(`[data-date="${event.date}"]`);
+        if (cell) {
+          const eventDiv = document.createElement('div');
+          eventDiv.className = `event ${event.type}`;
+          eventDiv.textContent = event.content;
+          cell.appendChild(eventDiv);
+        }
+      });
+    }
+    
+    function checkAndUpdateCalendar() {
+      const today = new Date();
+      const cells = document.querySelectorAll('.calendar-cell');
+      const lastCell = cells[cells.length - 1];
+      const lastDate = new Date(lastCell.getAttribute('data-date'));
+      
+      if (today > lastDate) {
+        // 清理旧事件
+        google.script.run
+          .withSuccessHandler(updateEvents)
+          .cleanOldEvents();
+        
+        // 更新日历
+        updateCalendarGrid(today);
+      }
+    }
+    
+    // 初始化日历
+    window.onload = initializeCalendar;
+    
+    // 每分钟检查一次是否需要更新日历
+    setInterval(checkAndUpdateCalendar, 60000);
+  </script>
+</body>
+</html>
