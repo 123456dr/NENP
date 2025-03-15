@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隨機運算計算機</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/delaunator@5.0.0/delaunator.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        #log { margin-top: 20px; text-align: left; display: inline-block; }
+        
+        /* 添加浮動提示框樣式 */
+        .tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding-top: 60px; /* 為固定導航欄留出空間 */
+        }
+
+        .header {
+            background-color: rgba(51, 51, 51, 0.95);
+            padding: 0.5rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            height: 50px; /* 固定高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hamburger {
+            width: 30px; /* 縮小漢堡按鈕 */
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: fixed;
+            top: 10px; /* 調整位置 */
+            left: 10px;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px; /* 縮小內邊距 */
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px; /* 縮小線條高度 */
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 50px; /* 從導航欄下方開始 */
+            left: 0;
+            width: 0;
+            height: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            z-index: 998;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-overlay.active {
+            width: 200px; /* 縮小選單寬度 */
+            height: auto;
+            max-height: calc(100vh - 50px); /* 最大高度為視窗高度減去導航欄高度 */
+        }
+
+        .menu-items {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-items a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .menu-overlay.active .menu-items {
+            opacity: 1;
+        }
+
+        /* 主要內容區域的樣式 */
+        .main-content {
+            padding: 10px;
+            margin-top: 20px;
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: calc(100vh - 70px); /* 减去header高度 */
+            overflow: visible; /* 允许内容溢出 */
+        }
+
+        /* 確保所有內容都在導航欄下方 */
+        h2, input, button, h4, #log {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 修改圖片容器樣式 */
+        #image-container {
+            position: relative;
+            width: 90vw;
+            max-width: 800px;
+            height: auto;
+            margin: 20px auto;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible; /* 允许内容溢出 */
+        }
+
+        /* 添加边框图案的样式 */
+        .border-image {
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.5s ease, transform 0.3s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .border-left {
+            left: -20px;  /* 向左移动20像素 */
+            top: 50%;
+            transform: translateY(-50%);
+            height: 80%;
+            width: auto;
+        }
+
+        .border-top {
+            top: -20px;  /* 向上移动20像素 */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20%;
+            height: auto;
+        }
+
+        .border-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 50%;
+            width: auto;
+        }
+
+        /* 添加消失动画效果 */
+        .border-image.fade-out {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        #pdf-image {
+            width: 100%;
+            height: auto;
+            max-height: 80vh;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        /* 添加媒体查询，针对不同设备尺寸调整图片大小 */
+        @media screen and (max-width: 1200px) {
+            #image-container {
+                width: 95vw;
+            }
+            #pdf-image {
+                max-height: 75vh;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            #image-container {
+                width: 98vw;
+                margin: 10px auto;
+            }
+            #pdf-image {
+                max-height: 70vh;
+            }
+            .border-left {
+                height: 70%;
+            }
+            .border-top {
+                width: 25%;
+            }
+            .border-right {
+                height: 45%;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            #image-container {
+                width: 100vw;
+                margin: 5px auto;
+            }
+            #pdf-image {
+                max-height: 60vh;
+            }
+            .border-left {
+                height: 20%;
+            }
+            .border-top {
+                width: 10%;
+            }
+            .border-right {
+                height: 40%;
+            }
+        }
+
+        @media screen and (max-width: 500px) {
+            .main-content {
+                min-height: auto; /* 移除最小高度限制 */
+                overflow: visible;
+                margin-bottom: 100vh; /* 添加底部空间以显示碎片 */
+            }
+            
+            #image-container {
+                overflow: visible;
+                margin-bottom: 50px; /* 增加底部间距 */
+            }
+            
+            #canvas-container {
+                position: absolute; /* 改为absolute定位 */
+                height: 200vh; /* 增加容器高度 */
+            }
+            
+            body {
+                overflow-x: hidden; /* 防止水平滚动 */
+                min-height: 200vh; /* 增加页面高度 */
+            }
+        }
+
+        .fragment-canvas {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: visible; /* 允许内容溢出 */
+        }
+
+        .crack {
+            position: absolute;
+            background: #000;
+            transform-origin: center;
+            z-index: 3;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="menu-overlay">
+            <div class="menu-items">
+                <a href="./">首頁</a>
+                <a href="calculate.html">幫倒忙計算機</a>
+                <a href="51121bobibo.html">51121bobibo</a>
+                <a href="greentoeye.html">GGTE</a>
+                <a href="pdf.html">PDF</a>
+            </div>
+        </div>
+
+        <h1>NENP NO ERROR NO PAIN</h1>
+    </header>
+
+    
+    <h2>你今天破房了ㄇ? &nbsp;&nbsp;&nbsp;&nbsp; <small>PDF 破大房</small></h2>
+
+    <div class="main-content">
+        <div id="image-container">
+            <img id="pdf-image" src="pdf.jpg" alt="PDF圖片">
+            <img class="border-image border-left" src="pdf3.jpg" alt="左邊框">
+            <img class="border-image border-top" src="pdf2.jpg" alt="上邊框">
+            <img class="border-image border-right" src="pdf1.jpg" alt="右邊框">
+        </div>
+        <div id="canvas-container"></div>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const menuOverlay = document.querySelector('.menu-overlay');
+            menuOverlay.classList.toggle('active');
+        }
+
+        let clickCount = 0;
+        const maxClicks = 7;
+        let engine, render, world;
+        let fragments = [];
+        let cracks = [];
+        let isBreaking = false; // 添加标志来控制是否正在进行整体破裂
+        
+        // 初始化Matter.js
+        function initPhysics() {
+            engine = Matter.Engine.create({
+                enableSleeping: true
+            });
+            world = engine.world;
+            
+            render = Matter.Render.create({
+                element: document.getElementById('canvas-container'),
+                engine: engine,
+                options: {
+                    width: window.innerWidth,
+                    height: window.innerWidth <= 500 ? window.innerHeight * 2 : window.innerHeight,
+                    wireframes: false,
+                    background: 'transparent'
+                }
+            });
+
+            // 根据屏幕宽度设置不同的地面位置
+            const groundY = window.innerWidth <= 500 
+                ? window.innerHeight * 1.5  // 小屏幕设备时地面位置更低
+                : window.innerHeight * 0.8; // 大屏幕保持原位置
+
+            const ground = Matter.Bodies.rectangle(
+                window.innerWidth / 2,
+                groundY,
+                window.innerWidth * 2,
+                60,
+                { 
+                    isStatic: true,
+                    render: {
+                        visible: false
+                    },
+                    friction: 0.5,
+                    restitution: 0.2
+                }
+            );
+            Matter.World.add(world, ground);
+
+            Matter.Engine.run(engine);
+            Matter.Render.run(render);
+        }
+
+        // 創建裂縫效果
+        function createCrack(x, y, angle, length) {
+            const crack = document.createElement('div');
+            crack.className = 'crack';
+            crack.style.width = `${length}px`;
+            crack.style.height = '2px';
+            crack.style.left = `${x}px`;
+            crack.style.top = `${y}px`;
+            crack.style.transform = `rotate(${angle}deg)`;
+            document.getElementById('image-container').appendChild(crack);
+            cracks.push(crack);
+            
+            // 裂縫動畫
+            crack.style.transition = 'width 0.3s ease-out';
+            setTimeout(() => {
+                crack.style.width = '0';
+            }, 0);
+        }
+
+        // 創建圖片碎片
+        function createImageFragment(x, y, width, height, sourceX, sourceY) {
+            const canvas = document.createElement('canvas');
+            canvas.className = 'fragment-canvas';
+            canvas.width = width;
+            canvas.height = height;
+            
+            const img = document.getElementById('pdf-image');
+            const imgRect = img.getBoundingClientRect();
+            
+            // 确保碎片位置相对于图片区域
+            canvas.style.left = `${x - imgRect.left}px`;
+            canvas.style.top = `${y - imgRect.top}px`;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, sourceX, sourceY, width, height, 0, 0, width, height);
+            
+            document.getElementById('image-container').appendChild(canvas);
+            return canvas;
+        }
+
+        // 添加边框显示函数
+        function showRandomBorder(position) {
+            const border = document.querySelector(`.border-${position}`);
+            if (border) {
+                border.style.opacity = '1';
+            }
+        }
+
+        // 处理鼠标点击的破裂效果
+        function handleClickShatter(e) {
+            if (isBreaking) return;
+            
+            clickCount++;
+            
+            // 在特定点击次数时显示边框
+            switch(clickCount) {
+                case 2:
+                    showRandomBorder('left');
+                    break;
+                case 4:
+                    showRandomBorder('top');
+                    break;
+                case 5:
+                    showRandomBorder('right');
+                    break;
+            }
+            
+            const img = document.getElementById('pdf-image');
+            const rect = img.getBoundingClientRect();
+            
+            // 检查点击是否在图片范围内
+            if (e.clientX < rect.left || e.clientX > rect.right || 
+                e.clientY < rect.top || e.clientY > rect.bottom) {
+                return;
+            }
+            
+            // 生成放射状的裂缝
+            const numCracks = 8;
+            for (let i = 0; i < numCracks; i++) {
+                const angle = (i * 360 / numCracks) + Math.random() * 30;
+                const length = 50 + Math.random() * 30;
+                createCrack(e.clientX, e.clientY, angle, length);
+            }
+            
+            // 创建图片碎片
+            const fragmentSize = 50;
+            const centerX = e.clientX - rect.left;
+            const centerY = e.clientY - rect.top;
+            
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    const x = centerX + i * fragmentSize;
+                    const y = centerY + j * fragmentSize;
+                    
+                    if (x >= 0 && x < rect.width && y >= 0 && y < rect.height) {
+                        const fragment = createImageFragment(
+                            e.clientX + i * fragmentSize,
+                            e.clientY + j * fragmentSize,
+                            fragmentSize,
+                            fragmentSize,
+                            x,
+                            y
+                        );
+                        fragments.push(fragment);
+                    }
+                }
+            }
+
+            // 检查是否达到最大点击次数
+            if (clickCount >= maxClicks) {
+                setTimeout(() => {
+                    startCompleteShatter();
+                }, 500); // 延迟500毫秒后触发整体破碎，让用户能看到最后一次点击的效果
+            }
+        }
+
+        // 开始整体破裂效果
+        function startCompleteShatter() {
+            isBreaking = true;
+            const img = document.getElementById('pdf-image');
+            img.removeEventListener('click', handleClickShatter); // 移除点击事件监听
+            completeShatter();
+        }
+
+        // 添加双击事件来触发整体破裂
+        function handleDoubleClick(e) {
+            if (!isBreaking) {
+                e.preventDefault();
+                startCompleteShatter();
+            }
+        }
+
+        // 完全碎裂效果
+        function completeShatter() {
+            // 立即移除所有边框图片
+            const borders = document.querySelectorAll('.border-image');
+            borders.forEach(border => {
+                border.remove(); // 直接移除边框图片
+            });
+            
+            const img = document.getElementById('pdf-image');
+            const rect = img.getBoundingClientRect();
+            
+            // 移除所有現有的裂縫
+            cracks.forEach(crack => crack.remove());
+            cracks = [];
+            
+            // 設置地面位置為視窗高度的80%處
+            const groundY = window.innerHeight * 0.8;
+            
+            // 更新地面位置
+            world.bodies.forEach(body => {
+                if (body.isStatic) {
+                    Matter.Body.setPosition(body, {
+                        x: window.innerWidth / 2,
+                        y: groundY
+                    });
+                }
+            });
+            
+            // 創建網格狀的碎片
+            const fragmentSize = 40;
+            const cols = Math.ceil(rect.width / fragmentSize);
+            const rows = Math.ceil(rect.height / fragmentSize);
+            
+            for (let i = 0; i < cols; i++) {
+                for (let j = 0; j < rows; j++) {
+                    const x = i * fragmentSize;
+                    const y = j * fragmentSize;
+                    const width = Math.min(fragmentSize, rect.width - x);
+                    const height = Math.min(fragmentSize, rect.height - y);
+                    
+                    const fragment = createImageFragment(
+                        rect.left + x,
+                        rect.top + y,
+                        width,
+                        height,
+                        x,
+                        y
+                    );
+                    
+                    // 添加物理效果
+                    const body = Matter.Bodies.rectangle(
+                        rect.left + x + width/2,
+                        rect.top + y + height/2,
+                        width,
+                        height,
+                        {
+                            render: {
+                                visible: false
+                            },
+                            friction: 0.5,     // 增加摩擦力
+                            restitution: 0.3   // 降低反彈力
+                        }
+                    );
+                    
+                    Matter.World.add(world, body);
+                    
+                    // 綁定碎片和物理體
+                    fragment.body = body;
+                    fragments.push(fragment);
+                    
+                    // 添加較小的隨機速度
+                    Matter.Body.setVelocity(body, {
+                        x: (Math.random() - 0.5) * 5,  // 降低水平速度
+                        y: Math.random() * 2           // 降低垂直速度
+                    });
+                    Matter.Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.05); // 降低旋轉速度
+                }
+            }
+            
+            // 隱藏原始圖片
+            img.style.visibility = 'hidden';
+            
+            // 更新碎片位置
+            function updateFragments() {
+                fragments.forEach(fragment => {
+                    if (fragment.body) {
+                        const pos = fragment.body.position;
+                        const angle = fragment.body.angle;
+                        fragment.style.transform = `translate(${pos.x - parseInt(fragment.style.left)}px, ${pos.y - parseInt(fragment.style.top)}px) rotate(${angle}rad)`;
+                    }
+                });
+                requestAnimationFrame(updateFragments);
+            }
+            
+            updateFragments();
+        }
+
+        // 初始化和事件監聽
+        window.onload = function() {
+            initPhysics();
+            
+            const img = document.getElementById('pdf-image');
+            img.addEventListener('click', handleClickShatter);
+            img.addEventListener('dblclick', handleDoubleClick);
+        };
+
+        // 修改窗口大小改变的处理函数
+        window.addEventListener('resize', function() {
+            if (render) {
+                render.canvas.width = window.innerWidth;
+                render.canvas.height = window.innerWidth <= 500 ? window.innerHeight * 2 : window.innerHeight;
+                
+                // 根据屏幕宽度设置不同的地面位置
+                const groundY = window.innerWidth <= 500 
+                    ? window.innerHeight * 1.5  // 小屏幕设备时地面位置更低
+                    : window.innerHeight * 0.8; // 大屏幕保持原位置
+                
+                // 更新地面位置
+                world.bodies.forEach(body => {
+                    if (body.isStatic) {
+                        Matter.Body.setPosition(body, {
+                            x: window.innerWidth / 2,
+                            y: groundY
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
