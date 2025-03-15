@@ -260,6 +260,59 @@
                 gap: 2px;
             }
         }
+
+        .switch-container {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 <body>
@@ -299,6 +352,13 @@ NO ERROR NO PAIN</h1>
         }
     </script>
 
+    <div class="switch-container">
+        <span>選前詢問</span>
+        <label class="switch">
+            <input type="checkbox" id="confirmToggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
 
     <h2>鴨力爆框算你厲害  <small>(賭徒歡迎)</small></h2>
 
@@ -322,6 +382,12 @@ NO ERROR NO PAIN</h1>
         let duckCount = 3;
         let gameActive = true;
         let hiddenNumber;
+        let confirmEnabled = true;  // 新增變數來追蹤開關狀態
+
+        // 添加開關監聽器
+        document.getElementById('confirmToggle').addEventListener('change', function(e) {
+            confirmEnabled = e.target.checked;
+        });
 
         function initGame() {
             duckCount = 3;
@@ -409,7 +475,7 @@ NO ERROR NO PAIN</h1>
         function selectNumber(number) {
             if (!gameActive) return;
 
-            if (confirm(`是否確定選擇 ${number} 點？`)) {
+            const proceedWithSelection = () => {
                 document.getElementById('cup').classList.add('revealed');
                 document.getElementById('hiddenNumber').textContent = hiddenNumber;
 
@@ -456,6 +522,14 @@ NO ERROR NO PAIN</h1>
                         generateHiddenNumber();
                     }, 2000);
                 }
+            };
+
+            if (confirmEnabled) {
+                if (confirm(`是否確定選擇 ${number} 點？`)) {
+                    proceedWithSelection();
+                }
+            } else {
+                proceedWithSelection();
             }
         }
 
