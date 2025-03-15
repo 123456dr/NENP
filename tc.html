@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寶箱遊戲</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 23px;
+            color: #fff;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #70bcdc, #6277c2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 2s ease-out;
+            max-width: 100%;
+            text-align: center;
+            justify-self: center;
+        }
+
+        #chests-container {
+            display: flex;
+            margin: 20px auto;
+            gap: 20px;
+            position: relative;
+            justify-content: center;
+            max-width: 800px;
+            padding: 0 20px;
+            flex-wrap: wrap; /* 允許換行 */
+            min-height: 240px; /* 確保有足夠空間放置兩行寶箱 */
+        }
+
+        .chest {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: all 1s ease-in-out;
+            flex: 0 0 auto;
+            margin: 10px; /* 添加外邊距確保間距 */
+        }
+
+        .chest img {
+            width: 70px;
+            height: 70px;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 增加閃爍效果 */
+        .blink {
+            animation: blinkEffect 0.5s alternate infinite;
+        }
+
+        @keyframes blinkEffect {
+            0% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* 錯誤寶箱的閃爍效果 */
+        .wrong {
+            animation: wrongEffect 0.5s alternate infinite;
+        }
+
+        @keyframes wrongEffect {
+            0% {
+                background-color: red;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        /* 放大成功寶箱效果 */
+        .correct {
+            animation: enlarge 0.5s ease-out forwards;
+            z-index: 10;
+        }
+
+        @keyframes enlarge {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.5); /* 縮小放大倍數以避免超出畫面 */
+            }
+        }
+
+        /* 錯誤寶箱的紅色保持效果 */
+        .wrong-fixed {
+            background-color: red;
+        }
+
+        /* 錢的圖片樣式 */
+        #money {
+            width: 50px;
+            height: 50px;
+            position: fixed;
+            display: none;
+            z-index: 100;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: scale(1.2);
+        }
+
+        /* 錢的動畫效果 */
+        #money.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        #money.move {
+            transform: scale(0.8);
+        }
+
+        /* 在小螢幕上調整寶箱大小 */
+        @media screen and (max-width: 600px) {
+            .chest {
+                width: 80px;
+                height: 80px;
+            }
+
+            .chest img {
+                width: 56px;
+                height: 56px;
+            }
+
+            #chests-container {
+                gap: 10px;
+            }
+        }
+        body { font-family: Arial, sans-serif; text-align: center; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        #log { margin-top: 20px; text-align: left; display: inline-block; }
+        
+        /* 添加浮動提示框樣式 */
+        .tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding-top: 60px; /* 為固定導航欄留出空間 */
+        }
+
+        .header {
+            background-color: rgba(51, 51, 51, 0.95);
+            padding: 0.5rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            height: 50px; /* 固定高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hamburger {
+            width: 30px; /* 縮小漢堡按鈕 */
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: fixed;
+            top: 10px; /* 調整位置 */
+            left: 10px;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px; /* 縮小內邊距 */
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px; /* 縮小線條高度 */
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 50px; /* 從導航欄下方開始 */
+            left: 0;
+            width: 0;
+            height: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            z-index: 998;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-overlay.active {
+            width: 200px; /* 縮小選單寬度 */
+            height: auto;
+            max-height: calc(100vh - 50px); /* 最大高度為視窗高度減去導航欄高度 */
+        }
+
+        .menu-items {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-items a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .menu-overlay.active .menu-items {
+            opacity: 1;
+        }
+
+        /* 主要內容區域的樣式 */
+        .main-content {
+            padding: 20px;
+            margin-top: 20px; /* 調整與導航欄的間距 */
+        }
+
+        /* 確保所有內容都在導航欄下方 */
+        h2, input, button, h4, #log {
+            position: relative;
+            z-index: 1;
+        }
+        
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="menu-overlay">
+            <div class="menu-items">
+                <a href="./">首頁</a>
+                <a href="calculate.html">幫倒忙計算機</a>
+                <a href="51121bobibo.html">51121bobibo</a>
+                <a href="greentoeye.html">GGTE</a>
+                <a href="pdf.html">PDF</a>
+                <a href="paperss.html">PSS</a>
+                <a href="classboard.html" target="_blank">班級記事板</a>
+                <a href="gambling.html" target="_blank">賭鴨賭呀</a>
+                <a href="tc.html"></a>
+                <a href="1.html" target="_blank">彈射臉臉</a>
+
+                
+                <a href="https://www.canva.com/design/DAGhwiMS-qU/yH-SR3u3JeM6H0JNXovNRQ/view?utm_content=DAGhwiMS-qU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=he822c5f56f">CANVA</a>
+
+            </div>
+        </div>
+
+        <h1>NENP
+NO ERROR NO PAIN</h1>
+    </header>
+
+    <script>
+        function toggleMenu() {
+            const menuOverlay = document.querySelector('.menu-overlay');
+            menuOverlay.classList.toggle('active');
+        }
+    </script>
+
+    <br>
+    <h1>寶箱遊戲</h1>
+    <p>選擇一個寶箱來放置寶物。只有兩次的選擇機會</p>
+
+    <div class="message" id="message">點擊一個寶箱來放置寶物</div>
+    
+    <div id="chests-container">
+        <div class="chest" id="chest0"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest1"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest2"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest3"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest4"><img src="close-removebg-preview.png" alt="寶箱"></div>
+    </div>
+
+    
+    <img id="money" src="money_remove.png" alt="錢" />
+
+    <script>
+        let correctChest = -1;
+        let gameStarted = false;
+        let currentOrder = [0, 1, 2, 3, 4];
+        let rounds = 0;
+        let speed = 1000;
+        let guessesLeft = 2;
+
+        const chests = document.querySelectorAll('.chest');
+        const message = document.getElementById('message');
+        const moneyImg = document.getElementById('money');
+        const treasureChestImg = "open_money-removebg-preview.png";
+        const emptyChestImg = "close-removebg-preview.png";
+        const chestWidth = 120; // 寶箱寬度加上間距
+
+        function getChestPosition(index) {
+            const chest = chests[index];
+            const rect = chest.getBoundingClientRect();
+            return rect.left;
+        }
+
+        chests.forEach((chest, index) => {
+            chest.addEventListener('click', () => {
+                if (!gameStarted) {
+                    correctChest = index;
+                    message.innerText = `你選擇了寶箱 ${index + 1} 來放寶物。`;
+                    gameStarted = true;
+                    showMoneyAnimation(index);  // 顯示錢的動畫
+                }
+            });
+        });
+
+        function showMoneyAnimation(selectedChest) {
+            const chest = chests[selectedChest];
+            const chestRect = chest.getBoundingClientRect();
+            const moneyImg = document.getElementById('money');
+
+            // 初始位置設置在視窗中央
+            moneyImg.style.left = `${window.innerWidth / 2 - 25}px`;
+            moneyImg.style.top = `${window.innerHeight / 2 - 25}px`;
+            moneyImg.style.display = "block";
+
+            // 觸發出現動畫
+            setTimeout(() => {
+                moneyImg.classList.add('show');
+            }, 100);
+
+            // 等待出現動畫完成後，開始移動到寶箱位置
+            setTimeout(() => {
+                moneyImg.classList.add('move');
+                moneyImg.style.left = `${chestRect.left + (chestRect.width - 50) / 2}px`;
+                moneyImg.style.top = `${chestRect.top + (chestRect.height - 50) / 2}px`;
+            }, 1000);
+
+            // 等待移動動畫完成後，隱藏錢幣並開始遊戲
+            setTimeout(() => {
+                moneyImg.style.display = "none";
+                moneyImg.classList.remove('show', 'move');
+                startGame();
+            }, 2000);
+        }
+
+        function startGame() {
+            rounds = 0;
+            shuffleChests();
+        }
+
+        function shuffleChests() {
+            if (rounds < 17) {
+                rounds++;
+                message.innerText = `寶箱正在交換位置...`;
+
+                for (let i = 0; i < currentOrder.length; i++) {
+                    const randomIndex = Math.floor(Math.random() * currentOrder.length);
+                    [currentOrder[i], currentOrder[randomIndex]] = [currentOrder[randomIndex], currentOrder[i]];
+                }
+
+                correctChest = currentOrder.indexOf(correctChest);
+                animateChests();
+                speed = Math.max(500, speed - 100);
+                setTimeout(shuffleChests, speed);
+            } else {
+                // 重置所有寶箱的位置
+                resetChestPositions();
+                message.innerText = `請選擇你認為有寶物的寶箱。`;
+                chests.forEach((chest, index) => {
+                    chest.addEventListener('click', () => checkAnswer(index));
+                });
+            }
+        }
+
+        function resetChestPositions() {
+            chests.forEach((chest) => {
+                chest.style.transform = 'none';
+                chest.style.position = 'relative';
+                chest.style.left = 'auto';
+                chest.style.top = 'auto';
+            });
+        }
+
+        function animateChests() {
+            const positions = Array.from(chests).map(chest => {
+                const rect = chest.getBoundingClientRect();
+                return {
+                    left: rect.left,
+                    top: rect.top
+                };
+            });
+
+            chests.forEach((chest, index) => {
+                const newIndex = currentOrder[index];
+                const currentPos = positions[index];
+                const newPos = positions[newIndex];
+                const moveX = newPos.left - currentPos.left;
+                const moveY = newPos.top - currentPos.top;
+                
+                chest.style.zIndex = newIndex;
+                chest.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            });
+        }
+
+        function checkAnswer(chosenChest) {
+            // 移除所有錯誤效果
+            chests.forEach(chest => {
+                chest.classList.remove("wrong", "wrong-fixed", "blink", "correct");
+            });
+
+            if (currentOrder[chosenChest] === correctChest) {
+                // 如果選擇正確，顯示寶物並更新圖片
+                chests[chosenChest].querySelector('img').src = treasureChestImg;
+                chests[chosenChest].classList.add("correct");  // 加入放大動畫並設置 z-index
+                message.innerText = '恭喜成功找到寶物！';
+                disableChests();  // 禁用所有寶箱點擊
+                endGame();
+            } else {
+                guessesLeft--;
+                // 如果猜錯，將圖片改為 null-removebg-preview.png 並顯示錯誤效果
+                chests[chosenChest].querySelector('img').src = "null-removebg-preview.png";
+                chests[chosenChest].classList.add("wrong");  // 加入錯誤效果
+
+                if (guessesLeft === 0) {
+                    message.innerText = '遊戲結束，兩次機會已用完。';
+                    disableChests();  // 禁用所有寶箱點擊
+                    // 結束後將錯誤的寶箱保持紅色
+                    chests.forEach((chest, index) => {
+                        if (currentOrder[index] !== correctChest) {
+                            chest.classList.add("wrong-fixed");  // 保持錯誤顏色
+                        }
+                    });
+                    endGame();
+                } else {
+                    message.innerText = `猜錯了，還剩 ${guessesLeft} 次機會。`;
+                }
+            }
+        }
+
+        // 禁用所有寶箱的點擊事件
+        function disableChests() {
+            chests.forEach(chest => {
+                chest.style.pointerEvents = 'none';  // 禁用點擊
+            });
+        }
+
+        function endGame() {
+            chests.forEach(chest => chest.style.pointerEvents = 'none');
+            setTimeout(() => {
+                if (confirm("遊戲結束！是否重新開始？")) {
+                    location.reload();
+                }
+            }, 1000);
+        }
+
+        // 監聽視窗大小變化
+        window.addEventListener('resize', () => {
+            if (!gameStarted) {
+                resetChestPositions();
+            }
+        });
+    </script>
+</body>
+
+</html>
