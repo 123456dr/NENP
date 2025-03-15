@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小球反彈遊戲</title>
+    <title>彈射臉臉</title>
     <style>
         body {
             display: flex;
@@ -16,9 +16,12 @@
             position: relative;
         }
         canvas {
-            border: 2px solid black;
-            margin-left: 100px; 
+        border: 2px solid black;
+        background-color: #ffffff;
+        position: relative;
+        left: 100px; /* 向右移動 150px */
         }
+
         #score {
             position: absolute;
             top: 10px;
@@ -32,7 +35,7 @@
         #highScore {
             position: absolute;
             top: 10px;
-            left: 120px;
+            left: 130px;
             font-size: 25px;
             color: black;
             background-color: #eb7b35; /* 背景顏色 */
@@ -41,8 +44,8 @@
         }
         #restartBtn {
             position: absolute;
-            top: 55%;  
-            left: 54%;  
+            top: 50%;  
+            left: 57.5%;  
             transform: translate(-50%, -50%);  
             padding: 10px 20px;
             font-size: 18px;
@@ -73,11 +76,13 @@
             margin: 0;
             font-size: 14px;
         }
+    
     </style>
 </head>
 <body>
 
-<canvas id="gameCanvas" width="1000" height="800"></canvas>
+<canvas id="gameCanvas" width="1000" height="800"></canvas><!--遊戲匡匡-->
+
 <div id="score">分數: 0</div>
 <div id="highScore">最高分: 0</div>
 <button id="restartBtn" onclick="restartGame()">重新開始</button>
@@ -90,11 +95,11 @@
 <!-- 上傳圖片 -->
 <div id="uploadBtns">
     <div>
-        <label for="ballImageInput">上傳小球圖片:</label>
+        <label for="ballImageInput">上傳大臉臉圖:</label>
         <input type="file" id="ballImageInput" accept="image/*">
     </div>
     <div>
-        <label for="platformImageInput">上傳平台圖片:</label>
+        <label for="platformImageInput">上傳躺平平圖:</label>
         <input type="file" id="platformImageInput" accept="image/*">
     </div>
 </div>
@@ -194,20 +199,17 @@
     document.addEventListener("keyup", keyUpHandler, false);
 
     function keyDownHandler(e) {
-        if (e.key === "Right" || e.key === "ArrowRight") {
-            rightPressed = true;
-            platform.isFlipped = false;
-        } else if (e.key === "Left" || e.key === "ArrowLeft") {
-            leftPressed = true;
-            platform.isFlipped = true;
-        } else if (e.key === " " || e.key === "Spacebar") {  // 空白鍵
-            if (gameOver) {
-                restartGame();  // 遊戲結束時按下空白鍵重新開始
-            } else {
-                togglePause();  // 切換暫停和開始
-            }
-        }
+    if (e.key === " " || e.key === "Spacebar") {  // 空白鍵
+        togglePause();  // 切換暫停和開始
+    } else if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = true;
+        platform.isFlipped = false;
+    } else if (e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = true;
+        platform.isFlipped = true;
     }
+}
+
 
     function keyUpHandler(e) {
         if (e.key === "Right" || e.key === "ArrowRight") {
@@ -218,8 +220,12 @@
     }
 
     function togglePause() {
-        paused = !paused;  // 切換暫停狀態
+    paused = !paused;  // 切換遊戲狀態
+    if (!paused) {
+        draw();  // 如果遊戲恢復，重新開始繪圖循環
     }
+}
+
 
     function drawBall() {
         ctx.save();
@@ -297,27 +303,28 @@
     }
 
     function draw() {
-        if (paused) {  // 如果遊戲暫停，顯示暫停畫面
-            ctx.font = "40px Arial";
-            ctx.fillStyle = "red";
-            ctx.fillText("遊戲暫停", 420, 350);
-            return;
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawBall();
-        drawPlatform();
-        drawScore();
-
-        if (gameOver) {
-            drawGameOver();
-            return;
-        }
-
-        moveBall();
-        movePlatform();
-        requestAnimationFrame(draw);
+    if (paused) {  // 如果遊戲暫停，只顯示暫停畫面
+        ctx.font = "40px Arial";
+        ctx.fillStyle = "red";
+        ctx.fillText("遊戲暫停", canvas.width / 2 - 100, canvas.height / 2);
+        return;
     }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBall();
+    drawPlatform();
+    drawScore();
+
+    if (gameOver) {
+        drawGameOver();
+        return;
+    }
+
+    moveBall();
+    movePlatform();
+    requestAnimationFrame(draw);
+}
+
 
     function restartGame() {
         initializeGame();
