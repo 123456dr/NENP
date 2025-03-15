@@ -529,9 +529,31 @@
         .modal-overlay.active {
             display: block;
         }
+        .qr-code {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            z-index: 1001;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .qr-code:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 475px) {
+            .qr-code {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
+    <img src="qrcode.png" alt="QR Code" class="qr-code">
     <header class="header">
         <div class="hamburger" onclick="toggleMenu()">
             <span></span>
