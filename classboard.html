@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="UTF-8">
-  <title>课程和考试日程表</title>
+  <title>班級白板</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -342,7 +342,7 @@
           try {
             return JSON.parse(text);
           } catch (e) {
-            console.error('解析响应失败:', text);
+            console.error('解析響應失敗:', text);
             throw new Error('服務器響應格式錯誤');
           }
         })
@@ -404,7 +404,7 @@
           try {
             return JSON.parse(text);
           } catch (e) {
-            console.error('解析响应失败:', text);
+            console.error('解析響應失敗:', text);
             throw new Error('服務器響應格式錯誤');
           }
         })
@@ -443,7 +443,7 @@
             try {
               return JSON.parse(text);
             } catch (e) {
-              console.error('解析响应失败:', text);
+              console.error('解析響應失敗:', text);
               throw new Error('服務器響應格式錯誤');
             }
           })
