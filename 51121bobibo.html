@@ -6,7 +6,6 @@
     <title>51121BoBiBo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/CCapture.js/1.1.0/CCapture.all.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         body { 
             margin: 0;
@@ -409,36 +408,6 @@
                 fill: #999;
             }
         }
-
-        .qrcode-button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: #2196F3;
-            margin: 10px auto;
-        }
-
-        .qrcode-container {
-            margin: 20px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        #qrcode {
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-        }
-
-        @media screen and (max-width: 726px) {
-            .qrcode-button {
-                background-color: #cccccc !important;
-                cursor: not-allowed !important;
-                opacity: 0.7;
-            }
-        }
     </style>
 </head>
 <body>
@@ -507,13 +476,6 @@ NO ERROR NO PAIN</h1>
                 下載短影片
             </button>
             
-            <button onclick="showQRCodeDialog()" class="qrcode-button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M3 3h8v8H3V3m2 2v4h4V5H5m8-2h8v8h-8V3m2 2v4h4V5h-4M3 13h8v8H3v-8m2 2v4h4v-4H5m13-2h3v2h-3v-2m0 4h3v2h-3v-2M13 13h3v2h-3v-2m0 4h3v2h-3v-2z"/>
-                </svg>
-                QRCode分享
-            </button>
-            
             <div class="image-upload">
                 <label>上傳左半部圖片: <input type="file" id="uploadLeft" accept="image/*"></label>
                 <label>上傳右半部圖片: <input type="file" id="uploadRight" accept="image/*"></label>
@@ -543,7 +505,6 @@ NO ERROR NO PAIN</h1>
     <div class="dialog-overlay" id="downloadingDialog">
         <div class="dialog-box">
             <h3>下載中請稍後...</h3>
-            <h3>請勿關閉此頁面(否則你會後悔)</h3>
             <div class="loading-spinner"></div>
         </div>
     </div>
@@ -555,19 +516,6 @@ NO ERROR NO PAIN</h1>
             <div class="dialog-buttons">
                 <button onclick="downloadVideo()">確認下載</button>
                 <button onclick="hideDialog('previewDialog')">取消</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="dialog-overlay" id="qrcodeDialog">
-        <div class="dialog-box">
-            <h3>QR Code 分享</h3>
-            <div class="qrcode-container">
-                <div id="qrcode"></div>
-                <button onclick="saveQRCode()">儲存圖檔</button>
-            </div>
-            <div class="dialog-buttons">
-                <button onclick="hideDialog('qrcodeDialog')">關閉</button>
             </div>
         </div>
     </div>
@@ -608,7 +556,6 @@ NO ERROR NO PAIN</h1>
         let audioDestination = null;
         let recordedChunks = [];
         let currentVideoBlob = null;
-        let currentVideoUrl = '';
         
         init();
         animate();
@@ -1157,145 +1104,6 @@ NO ERROR NO PAIN</h1>
                     previewDownloadButton.style.opacity = '1';
                 }
             }
-        }
-
-        function showQRCodeDialog() {
-            if (window.innerWidth <= 726) {
-                alert('不支援手機用戶分享');
-                return;
-            }
-            startQRCodeRecording();
-        }
-        
-        function startQRCodeRecording() {
-            hideDialog('qrcodeDialog');
-            document.getElementById('downloadingDialog').style.display = 'flex';
-            document.getElementById('downloadingDialog').querySelector('h3').textContent = '錄製中請稍後...';
-
-            const tempCanvas = document.createElement('canvas');
-            const tempCtx = tempCanvas.getContext('2d');
-            tempCanvas.width = renderer.domElement.width;
-            tempCanvas.height = renderer.domElement.height;
-            
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            audioDestination = audioContext.createMediaStreamDestination();
-            
-            const audioElement = new Audio(musicList[currentMusic]);
-            audioElement.loop = true;
-            audioElement.volume = 0.5;
-            
-            const audioSource = audioContext.createMediaElementSource(audioElement);
-            audioSource.connect(audioDestination);
-            
-            const originalAnimate = animate;
-            animate = function() {
-                requestAnimationFrame(animate);
-                
-                if (isRotating) {
-                    scene.rotation.y += rotationSpeed;
-                }
-                
-                renderer.render(scene, camera);
-                
-                tempCtx.drawImage(renderer.domElement, 0, 0);
-                
-                tempCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                tempCtx.fillRect(tempCanvas.width - 100, tempCanvas.height - 40, 90, 30);
-                tempCtx.fillStyle = 'white';
-                tempCtx.font = 'bold 12px Arial';
-                tempCtx.textAlign = 'center';
-                tempCtx.textBaseline = 'middle';
-                tempCtx.fillText('Made by NENP', tempCanvas.width - 55, tempCanvas.height - 25);
-            };
-            
-            const canvasStream = tempCanvas.captureStream(RECORD_FPS);
-            const tracks = [...canvasStream.getVideoTracks(), ...audioDestination.stream.getAudioTracks()];
-            const combinedStream = new MediaStream(tracks);
-            
-            let options = {
-                mimeType: 'video/webm;codecs=vp8,opus',
-                videoBitsPerSecond: 5000000,
-                audioBitsPerSecond: 128000
-            };
-            
-            mediaRecorder = new MediaRecorder(combinedStream, options);
-            
-            recordedChunks = [];
-            mediaRecorder.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    recordedChunks.push(event.data);
-                }
-            };
-            
-            mediaRecorder.onstop = async () => {
-                animate = originalAnimate;
-                
-                const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-                currentVideoBlob = recordedBlob;
-                
-                // 上傳影片到臨時服務器並獲取URL
-                const formData = new FormData();
-                formData.append('video', currentVideoBlob, 'video.webm');
-                
-                try {
-                    const response = await fetch('https://tmpfiles.org/api/v1/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
-                    currentVideoUrl = data.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
-                    
-                    // 生成QR Code
-                    const qrcodeContainer = document.getElementById('qrcode');
-                    qrcodeContainer.innerHTML = '';
-                    QRCode.toCanvas(qrcodeContainer, currentVideoUrl, { width: 200 }, function (error) {
-                        if (error) console.error(error);
-                    });
-                    
-                    hideDialog('downloadingDialog');
-                    document.getElementById('qrcodeDialog').style.display = 'flex';
-                } catch (error) {
-                    console.error('上傳失敗：', error);
-                    alert('影片上傳失敗，請稍後再試');
-                    hideDialog('downloadingDialog');
-                }
-                
-                audioContext.close();
-                bgMusic.pause();
-            };
-            
-            mediaRecorder.start(1000);
-            
-            audioElement.currentTime = 0;
-            audioElement.play().catch(function(error) {
-                console.log("音樂播放失敗：", error);
-            });
-            
-            if (!isRotating) {
-                isRotating = true;
-                scene.rotation.y = 0;
-            }
-            
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                    audioElement.pause();
-                    audioElement.currentTime = 0;
-                    isRotating = false;
-                }
-            }, RECORD_DURATION * 1000);
-        }
-        
-        function saveQRCode() {
-            const qrcodeCanvas = document.querySelector('#qrcode canvas');
-            if (!qrcodeCanvas) return;
-            
-            const link = document.createElement('a');
-            link.download = 'NENP_51121popipo_qrcode.png';
-            link.href = qrcodeCanvas.toDataURL('image/png');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
         }
     </script>
 </body>
