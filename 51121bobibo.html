@@ -122,6 +122,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
         }
         
         .fullscreen-button:hover {
@@ -391,6 +392,21 @@
         .main-content {
             padding: 20px;
             margin-top: 20px; /* 調整與導航欄的間距 */
+        }
+
+        @media screen and (max-width: 500px) {
+            .fullscreen-button {
+                background: rgba(128, 128, 128, 0.5) !important;
+                cursor: not-allowed !important;
+            }
+            
+            .fullscreen-button:hover {
+                background: rgba(128, 128, 128, 0.5) !important;
+            }
+            
+            .fullscreen-button svg {
+                fill: #999;
+            }
         }
     </style>
 </head>
@@ -825,6 +841,12 @@ NO ERROR NO PAIN</h1>
         }
 
         function toggleFullscreen() {
+            // 檢查螢幕寬度
+            if (window.innerWidth <= 500) {
+                alert('不支援手機板全螢幕(我就爛');
+                return;
+            }
+            
             const container = document.getElementById('canvas-container');
             
             if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
