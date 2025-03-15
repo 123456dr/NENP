@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寶箱遊戲</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding-top: 50px;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 23px;
+            color: #fff;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #70bcdc, #6277c2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 2s ease-out;
+            max-width: 100%;
+            text-align: center;
+            justify-self: center;
+        }
+
+        #chests-container {
+            display: flex;
+            margin-top: 20px;
+            gap: 20px;
+            position: relative;
+            justify-content: center;
+        }
+
+        .chest {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            transition: transform 1s ease-in-out, z-index 0s;
+        }
+
+        .chest img {
+            width: 70px;
+            height: 70px;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 增加閃爍效果 */
+        .blink {
+            animation: blinkEffect 0.5s alternate infinite;
+        }
+
+        @keyframes blinkEffect {
+            0% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* 錯誤寶箱的閃爍效果 */
+        .wrong {
+            animation: wrongEffect 0.5s alternate infinite;
+        }
+
+        @keyframes wrongEffect {
+            0% {
+                background-color: red;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        /* 放大成功寶箱效果 */
+        .correct {
+            animation: enlarge 0.5s ease-out forwards;
+            z-index: 10; /* 放大時將寶箱放置於最上層 */
+        }
+
+        @keyframes enlarge {
+            0% {
+                transform: scale(1); /* 初始大小 */
+            }
+
+            100% {
+                transform: scale(2); /* 放大三倍，但不改變位置 */
+            }
+        }
+
+        /* 錯誤寶箱的紅色保持效果 */
+        .wrong-fixed {
+            background-color: red;
+        }
+
+        /* 錢的圖片樣式 */
+        #money {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+            display: none;
+            z-index: 5;
+            transition: left 1s ease-in-out, top 1s ease-in-out; /* 讓錢圖片平滑移動 */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>寶箱遊戲</h1>
+    <p>選擇一個寶箱來放置寶物。只有兩次的選擇機會</p>
+
+    <div class="message" id="message">點擊一個寶箱來放置寶物</div>
+    
+    <div id="chests-container">
+        <div class="chest" id="chest0" style="left: 0;"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest1" style="left: 120px;"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest2" style="left: 240px;"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest3" style="left: 360px;"><img src="close-removebg-preview.png" alt="寶箱"></div>
+        <div class="chest" id="chest4" style="left: 480px;"><img src="close-removebg-preview.png" alt="寶箱"></div>
+    </div>
+
+    
+    <img id="money" src="money_remove.png" alt="錢" />
+
+    <script>
+        let correctChest = -1;
+        let gameStarted = false;
+        let currentOrder = [0, 1, 2, 3, 4];
+        let rounds = 0;
+        let speed = 1000;
+        let guessesLeft = 2;
+
+        const chests = document.querySelectorAll('.chest');
+        const message = document.getElementById('message');
+        const moneyImg = document.getElementById('money');
+        const treasureChestImg = "open_money-removebg-preview.png"; // 這是新的寶箱圖片
+        const emptyChestImg = "close-removebg-preview.png";
+        const chestPositions = [0, 120, 240, 360, 480];
+
+        chests.forEach((chest, index) => {
+            chest.addEventListener('click', () => {
+                if (!gameStarted) {
+                    correctChest = index;
+                    message.innerText = `你選擇了寶箱 ${index + 1} 來放寶物。`;
+                    gameStarted = true;
+                    showMoneyAnimation(index);  // 顯示錢的動畫
+                }
+            });
+        });
+
+        function showMoneyAnimation(selectedChest) {
+            // 顯示錢的圖片並將它移動到選擇的寶箱上
+            const chest = chests[selectedChest];
+            const chestRect = chest.getBoundingClientRect();
+            moneyImg.style.left = `${chestRect.left + chestRect.width / 2 - moneyImg.width / 2}px`;
+            moneyImg.style.top = `${chestRect.top + chestRect.height / 2 - moneyImg.height / 2}px`;
+            moneyImg.style.display = "block";
+
+            // 讓錢的圖片平滑移動到選擇的寶箱位置，並等待一秒後開始遊戲
+            setTimeout(() => {
+                moneyImg.style.display = "none";
+                startGame();  // 在錢消失後開始遊戲
+            }, 1000);  // 等待一秒鐘再開始
+        }
+
+        function startGame() {
+            rounds = 0;
+            shuffleChests();
+        }
+
+        function shuffleChests() {
+            if (rounds < 17) {
+                rounds++;
+                message.innerText = `寶箱正在交換位置...`;
+
+                for (let i = 0; i < currentOrder.length; i++) {
+                    const randomIndex = Math.floor(Math.random() * currentOrder.length);
+                    [currentOrder[i], currentOrder[randomIndex]] = [currentOrder[randomIndex], currentOrder[i]];
+                }
+
+                correctChest = currentOrder.indexOf(correctChest);
+                animateChests();
+                speed = Math.max(500, speed - 100);
+                setTimeout(shuffleChests, speed);
+            } else {
+                message.innerText = `請選擇你認為有寶物的寶箱。`;
+                chests.forEach((chest, index) => {
+                    chest.addEventListener('click', () => checkAnswer(index));
+                });
+            }
+        }
+
+        function animateChests() {
+            chests.forEach((chest, index) => {
+                const newIndex = currentOrder[index];
+                chest.style.transform = `translateY(-60px) translateX(${chestPositions[newIndex] - chestPositions[index]}px) translateY(60px)`;
+            });
+        }
+
+        function checkAnswer(chosenChest) {
+            // 移除所有錯誤效果
+            chests.forEach(chest => {
+                chest.classList.remove("wrong", "wrong-fixed", "blink", "correct");
+            });
+
+            if (currentOrder[chosenChest] === correctChest) {
+                // 如果選擇正確，顯示寶物並更新圖片
+                chests[chosenChest].querySelector('img').src = treasureChestImg;
+                chests[chosenChest].classList.add("correct");  // 加入放大動畫並設置 z-index
+                message.innerText = '恭喜成功找到寶物！';
+                disableChests();  // 禁用所有寶箱點擊
+                endGame();
+            } else {
+                guessesLeft--;
+                // 如果猜錯，將圖片改為 null-removebg-preview.png 並顯示錯誤效果
+                chests[chosenChest].querySelector('img').src = "null-removebg-preview.png";
+                chests[chosenChest].classList.add("wrong");  // 加入錯誤效果
+
+                if (guessesLeft === 0) {
+                    message.innerText = '遊戲結束，兩次機會已用完。';
+                    disableChests();  // 禁用所有寶箱點擊
+                    // 結束後將錯誤的寶箱保持紅色
+                    chests.forEach((chest, index) => {
+                        if (currentOrder[index] !== correctChest) {
+                            chest.classList.add("wrong-fixed");  // 保持錯誤顏色
+                        }
+                    });
+                    endGame();
+                } else {
+                    message.innerText = `猜錯了，還剩 ${guessesLeft} 次機會。`;
+                }
+            }
+        }
+
+        // 禁用所有寶箱的點擊事件
+        function disableChests() {
+            chests.forEach(chest => {
+                chest.style.pointerEvents = 'none';  // 禁用點擊
+            });
+        }
+
+        function endGame() {
+            chests.forEach(chest => chest.style.pointerEvents = 'none');
+            setTimeout(() => {
+                if (confirm("遊戲結束！是否重新開始？")) {
+                    location.reload();
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>
