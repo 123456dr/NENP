@@ -342,6 +342,55 @@
         .message-box.fade-out {
             opacity: 0;
         }
+
+        .record-container {
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .switch-container {
+            position: fixed;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        #confirmSwitch {
+            top: 110px;
+        }
+
+        #infiniteSwitch {
+            top: 160px;
+        }
+
+        @media screen and (max-width: 610px) {
+            .record-container {
+                top: auto;
+                bottom: 120px;
+            }
+            #confirmSwitch {
+                top: auto;
+                bottom: 70px;
+            }
+            #infiniteSwitch {
+                top: auto;
+                bottom: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -381,10 +430,22 @@ NO ERROR NO PAIN</h1>
         }
     </script>
 
-    <div class="switch-container">
+    <div class="record-container">
+        最高鴨力：<span id="highScore">3</span>
+    </div>
+
+    <div class="switch-container" id="confirmSwitch">
         <span>選前詢問</span>
         <label class="switch">
             <input type="checkbox" id="confirmToggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <div class="switch-container" id="infiniteSwitch">
+        <span>無限賭局</span>
+        <label class="switch">
+            <input type="checkbox" id="infiniteToggle">
             <span class="slider"></span>
         </label>
     </div>
@@ -411,11 +472,27 @@ NO ERROR NO PAIN</h1>
         let duckCount = 3;
         let gameActive = true;
         let hiddenNumber;
-        let confirmEnabled = true;  // 新增變數來追蹤開關狀態
+        let confirmEnabled = localStorage.getItem('confirmEnabled') === 'false' ? false : true;
+        let infiniteMode = localStorage.getItem('infiniteMode') === 'true' ? true : false;
+        let highScore = parseInt(localStorage.getItem('highScore')) || 3;
+
+        // 更新高分顯示
+        document.getElementById('highScore').textContent = highScore;
+        
+        // 設置開關初始狀態
+        document.getElementById('confirmToggle').checked = confirmEnabled;
+        document.getElementById('infiniteToggle').checked = infiniteMode;
 
         // 添加開關監聽器
         document.getElementById('confirmToggle').addEventListener('change', function(e) {
             confirmEnabled = e.target.checked;
+            localStorage.setItem('confirmEnabled', confirmEnabled);
+        });
+
+        // 添加無限賭局開關監聽器
+        document.getElementById('infiniteToggle').addEventListener('change', function(e) {
+            infiniteMode = e.target.checked;
+            localStorage.setItem('infiniteMode', infiniteMode);
         });
 
         function initGame() {
@@ -518,6 +595,14 @@ NO ERROR NO PAIN</h1>
             setTimeout(removeMessage, duration);
         }
 
+        function updateHighScore() {
+            if (duckCount > highScore) {
+                highScore = duckCount;
+                document.getElementById('highScore').textContent = highScore;
+                localStorage.setItem('highScore', highScore);
+            }
+        }
+
         function selectNumber(number) {
             if (!gameActive) return;
 
@@ -528,12 +613,13 @@ NO ERROR NO PAIN</h1>
                 if (number === hiddenNumber) {
                     showMessage('恭喜！');
                     duckCount++;
-                    disableDice(); // 答對時立即禁用骰子
+                    updateHighScore();
+                    disableDice();
                     updateDucks();
                     setTimeout(() => {
                         document.getElementById('cup').classList.remove('revealed');
                         generateHiddenNumber();
-                        enableDice(); // 蓋子蓋上後重新啟用骰子
+                        enableDice();
                     }, 500);
                 } else {
                     disableDice();
@@ -543,16 +629,23 @@ NO ERROR NO PAIN</h1>
                         updateDucks();
                         
                         if (duckCount <= 0) {
-                            setTimeout(() => {
-                                alert('你輸鴨輸得徹底阿')
-                            }, 100);
-                            setTimeout(() => {
-                                if (confirm('我是賭徒，再次遊玩')) {
+                            if (infiniteMode) {
+                                showMessage('我是賭徒在來一局', 1500);
+                                setTimeout(() => {
                                     initGame();
-                                } else {
-                                    gameActive = false;
-                                }
-                            }, 100);
+                                }, 1000);
+                            } else {
+                                setTimeout(() => {
+                                    alert('你輸鴨輸得徹底阿')
+                                }, 100);
+                                setTimeout(() => {
+                                    if (confirm('我是賭徒，再次遊玩')) {
+                                        initGame();
+                                    } else {
+                                        gameActive = false;
+                                    }
+                                }, 100);
+                            }
                         } else {
                             setTimeout(() => {
                                 document.getElementById('cup').classList.remove('revealed');
