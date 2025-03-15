@@ -499,6 +499,7 @@ NO ERROR NO PAIN</h1>
     <div class="dialog-overlay" id="downloadingDialog">
         <div class="dialog-box">
             <h3>下載中請稍後...</h3>
+            <h3>請勿關閉此頁面(否則你會後悔)</h3>
             <div class="loading-spinner"></div>
         </div>
     </div>
@@ -510,6 +511,15 @@ NO ERROR NO PAIN</h1>
             <div class="dialog-buttons">
                 <button onclick="downloadVideo()">確認下載</button>
                 <button onclick="hideDialog('previewDialog')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="errorDialog">
+        <div class="dialog-box">
+            <h3>失敗，你是天選之電腦(mac不行</h3>
+            <div class="dialog-buttons">
+                <button onclick="hideDialog('errorDialog')">確定</button>
             </div>
         </div>
     </div>
@@ -545,11 +555,13 @@ NO ERROR NO PAIN</h1>
         let recordingFrames = 0;
         const RECORD_FPS = 30;
         const RECORD_DURATION = 10; // 10秒
+        const MAX_RECORD_DURATION = 15; // 最大录制时间15秒
         let mediaRecorder = null;
         let audioContext = null;
         let audioDestination = null;
         let recordedChunks = [];
         let currentVideoBlob = null;
+        let recordingStartTime = 0;
         
         init();
         animate();
@@ -898,6 +910,8 @@ NO ERROR NO PAIN</h1>
         }
         
         function startRecording() {
+            audioContext.resume().then(() => console.log("AudioContext resumed"));
+
             hideDialog('downloadDialog');
             document.getElementById('downloadingDialog').style.display = 'flex';
             document.getElementById('downloadingDialog').querySelector('h3').textContent = '錄製中請稍後...';
@@ -966,6 +980,24 @@ NO ERROR NO PAIN</h1>
                 if (event.data.size > 0) {
                     recordedChunks.push(event.data);
                 }
+                
+                // 检查录制时间
+                const currentTime = Date.now();
+                const recordingDuration = (currentTime - recordingStartTime) / 1000;
+                
+                if (recordingDuration > MAX_RECORD_DURATION) {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        audioElement.pause();
+                        audioElement.currentTime = 0;
+                        isRotating = false;
+                        
+                        // 显示错误对话框
+                        hideDialog('downloadingDialog');
+                        document.getElementById('errorDialog').style.display = 'flex';
+                        recordedChunks = []; // 清空已录制的数据
+                    }
+                }
             };
             
             mediaRecorder.onstop = async () => {
@@ -988,7 +1020,8 @@ NO ERROR NO PAIN</h1>
                 bgMusic.pause();
             };
             
-            // 開始錄製
+            // 开始录制时记录开始时间
+            recordingStartTime = Date.now();
             mediaRecorder.start(1000);
             
             // 確保音頻播放
@@ -1002,16 +1035,6 @@ NO ERROR NO PAIN</h1>
                 isRotating = true;
                 scene.rotation.y = 0;
             }
-            
-            // 設置定時器在10秒後停止錄製
-            setTimeout(() => {
-                if (mediaRecorder && mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                    audioElement.pause();
-                    audioElement.currentTime = 0;
-                    isRotating = false;
-                }
-            }, RECORD_DURATION * 1000);
         }
 
         function downloadVideo() {
