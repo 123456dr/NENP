@@ -313,6 +313,26 @@
         input:checked + .slider:before {
             transform: translateX(20px);
         }
+
+        /* 添加浮動提示框樣式 */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            z-index: 1001;
+            opacity: 1;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+        .message-box.fade-out {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -472,6 +492,23 @@ NO ERROR NO PAIN</h1>
             });
         }
 
+        function showMessage(message, duration = 1000) {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'message-box';
+            messageBox.textContent = message;
+            document.body.appendChild(messageBox);
+
+            const removeMessage = () => {
+                messageBox.classList.add('fade-out');
+                setTimeout(() => {
+                    document.body.removeChild(messageBox);
+                }, 300);
+            };
+
+            messageBox.addEventListener('click', removeMessage);
+            setTimeout(removeMessage, duration);
+        }
+
         function selectNumber(number) {
             if (!gameActive) return;
 
@@ -480,47 +517,39 @@ NO ERROR NO PAIN</h1>
                 document.getElementById('hiddenNumber').textContent = hiddenNumber;
 
                 if (number === hiddenNumber) {
-                    alert('恭喜！');
+                    showMessage('恭喜！');
                     duckCount++;
+                    disableDice(); // 答對時立即禁用骰子
+                    updateDucks();
+                    setTimeout(() => {
+                        document.getElementById('cup').classList.remove('revealed');
+                        generateHiddenNumber();
+                        enableDice(); // 蓋子蓋上後重新啟用骰子
+                    }, 500);
                 } else {
                     disableDice();
                     setTimeout(() => {
-                        alert('錯了 鴨力-1');
+                        showMessage('錯了 鴨力-1');
                         duckCount--;
                         updateDucks();
                         
                         if (duckCount <= 0) {
-                            alert('你輸鴨輸得徹底阿');
-                            if (confirm('我是賭徒，再次遊玩')) {
-                                initGame();
-                            } else {
-                                gameActive = false;
-                            }
+                            setTimeout(() => {
+                                if (confirm('你輸鴨輸得徹底阿\n我是賭徒，再次遊玩')) {
+                                    initGame();
+                                } else {
+                                    gameActive = false;
+                                }
+                            }, 100);
                         } else {
                             setTimeout(() => {
                                 document.getElementById('cup').classList.remove('revealed');
                                 generateHiddenNumber();
                                 enableDice();
-                            }, 200);
+                            }, 100);
                         }
                     }, 500);
                     return;
-                }
-
-                updateDucks();
-
-                if (duckCount <= 0) {
-                    alert('你輸鴨輸得徹底阿');
-                    if (confirm('我是賭徒，再次遊玩')) {
-                        initGame();
-                    } else {
-                        gameActive = false;
-                    }
-                } else {
-                    setTimeout(() => {
-                        document.getElementById('cup').classList.remove('revealed');
-                        generateHiddenNumber();
-                    }, 2000);
                 }
             };
 
