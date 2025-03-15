@@ -1151,22 +1151,22 @@ NO ERROR NO PAIN</h1>
                 downloadButton.style.backgroundColor = '#cccccc';
                 downloadButton.style.cursor = 'not-allowed';
                 downloadButton.style.opacity = '0.7';
-                if (cloudSaveButton) {
-                    cloudSaveButton.style.backgroundColor = '#cccccc';
-                    cloudSaveButton.style.cursor = 'not-allowed';
-                    cloudSaveButton.style.opacity = '0.7';
-                }
                 if (previewDownloadButton) {
                     previewDownloadButton.style.backgroundColor = '#cccccc';
                     previewDownloadButton.style.cursor = 'not-allowed';
                     previewDownloadButton.style.opacity = '0.7';
+                }
+                if (cloudSaveButton) {
+                    cloudSaveButton.style.backgroundColor = '#2196F3';
+                    cloudSaveButton.style.cursor = 'pointer';
+                    cloudSaveButton.style.opacity = '1';
                 }
             } else {
                 downloadButton.style.backgroundColor = '#4CAF50';
                 downloadButton.style.cursor = 'pointer';
                 downloadButton.style.opacity = '1';
                 if (cloudSaveButton) {
-                    cloudSaveButton.style.backgroundColor = '#4CAF50';
+                    cloudSaveButton.style.backgroundColor = '#2196F3';
                     cloudSaveButton.style.cursor = 'pointer';
                     cloudSaveButton.style.opacity = '1';
                 }
@@ -1186,7 +1186,6 @@ NO ERROR NO PAIN</h1>
                 document.getElementById('downloadingDialog').querySelector('h3').textContent = '錄製中請稍後...';
 
                 // 設置錄製選項
-                const chunks = [];
                 const canvas = renderer.domElement;
                 
                 // 創建臨時畫布來處理水印
@@ -1195,13 +1194,14 @@ NO ERROR NO PAIN</h1>
                 tempCanvas.width = canvas.width;
                 tempCanvas.height = canvas.height;
                 
-                // 使用 CCapture.js 進行錄製
+                // 使用 CCapture.js 進行錄製，針對移動設備優化設置
                 const capturer = new CCapture({
                     format: 'webm',
                     framerate: 30,
                     verbose: false,
                     display: false,
-                    quality: 85
+                    quality: 85,
+                    name: 'NENP_51121popipo'
                 });
 
                 // 修改 animate 函數來處理錄製
@@ -1238,14 +1238,9 @@ NO ERROR NO PAIN</h1>
                     scene.rotation.y = 0;
                 }
 
-                // 播放音樂
-                const audioElement = new Audio(musicList[currentMusic]);
-                audioElement.play();
-                
                 // 10秒後停止錄製
                 setTimeout(async () => {
                     capturer.stop();
-                    audioElement.pause();
                     isRotating = false;
                     
                     // 恢復原始的 animate 函數
@@ -1253,19 +1248,26 @@ NO ERROR NO PAIN</h1>
                     
                     // 處理錄製的數據
                     capturer.save(async (blob) => {
-                        // 顯示預覽
-                        const previewVideo = document.getElementById('previewVideo');
-                        previewVideo.src = URL.createObjectURL(blob);
-                        hideDialog('downloadingDialog');
-                        document.getElementById('previewDialog').style.display = 'flex';
+                        try {
+                            // 顯示預覽
+                            const previewVideo = document.getElementById('previewVideo');
+                            const videoUrl = URL.createObjectURL(blob);
+                            previewVideo.src = videoUrl;
+                            hideDialog('downloadingDialog');
+                            document.getElementById('previewDialog').style.display = 'flex';
 
-                        // 修改預覽對話框的按鈕
-                        const previewDialog = document.getElementById('previewDialog');
-                        const buttons = previewDialog.querySelector('.dialog-buttons');
-                        buttons.innerHTML = `
-                            <button onclick="saveToCloud()">儲存影片</button>
-                            <button onclick="hideDialog('previewDialog')">取消</button>
-                        `;
+                            // 修改預覽對話框的按鈕
+                            const previewDialog = document.getElementById('previewDialog');
+                            const buttons = previewDialog.querySelector('.dialog-buttons');
+                            buttons.innerHTML = `
+                                <button onclick="saveToCloud()">儲存影片</button>
+                                <button onclick="hideDialog('previewDialog')">取消</button>
+                            `;
+                        } catch (error) {
+                            console.error('預覽生成失敗:', error);
+                            alert('預覽生成失敗，請重試');
+                            hideDialog('downloadingDialog');
+                        }
                     });
                 }, RECORD_DURATION * 1000);
 
@@ -1281,17 +1283,20 @@ NO ERROR NO PAIN</h1>
                 const previewVideo = document.getElementById('previewVideo');
                 const videoBlob = await fetch(previewVideo.src).then(r => r.blob());
                 
-                // 針對移動設備使用直接下載方式
+                // 創建下載連結
                 const url = URL.createObjectURL(videoBlob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = 'NENP_51121popipo.webm';
                 
-                // 針對 iOS Safari 的特殊處理
-                if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-                    // 在 iOS 上，我們需要打開一個新窗口來觸發下載
+                // 針對不同設備的處理
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    // 移動設備：直接打開URL
                     window.location.href = url;
                 } else {
+                    // 桌面設備：使用下載連結
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
