@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>骰子賭博遊戲</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .top-container {
+            display: flex;
+            justify-content: space-around;
+            width: 80%;
+            margin: 20px;
+        }
+        .cup {
+            width: 200px;
+            height: 200px;
+            background-color: #8b4513;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .cup.revealed {
+            transform: translateY(-50px);
+        }
+        .duck-container {
+            width: 300px;
+            height: 200px;
+            border: 3px solid #000;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px;
+            gap: 5px;
+        }
+        .duck {
+            width: 50px;
+            height: 50px;
+            background-color: yellow;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .dice-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 50px;
+        }
+        .dice {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border: 2px solid black;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .dice.disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .dice:hover {
+            background-color: #ddd;
+        }
+        .hidden-number {
+            font-size: 36px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-container">
+        <div class="cup" id="cup">
+            <span class="hidden-number" id="hiddenNumber"></span>
+        </div>
+        <div class="duck-container" id="duckContainer">
+        </div>
+    </div>
+    <div class="dice-container" id="diceContainer">
+        <div class="dice" onclick="selectNumber(1)">1</div>
+        <div class="dice" onclick="selectNumber(2)">2</div>
+        <div class="dice" onclick="selectNumber(3)">3</div>
+        <div class="dice" onclick="selectNumber(4)">4</div>
+        <div class="dice" onclick="selectNumber(5)">5</div>
+        <div class="dice" onclick="selectNumber(6)">6</div>
+    </div>
+
+    <script>
+        let duckCount = 3;
+        let gameActive = true;
+        let hiddenNumber;
+
+        function initGame() {
+            duckCount = 3;
+            gameActive = true;
+            document.getElementById('cup').classList.remove('revealed');
+            updateDucks();
+            generateHiddenNumber();
+            document.getElementById('hiddenNumber').style.color = 'white';
+            enableDice();
+        }
+
+        function generateHiddenNumber() {
+            hiddenNumber = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('hiddenNumber').textContent = '';
+        }
+
+        function updateDucks() {
+            const container = document.getElementById('duckContainer');
+            container.innerHTML = '';
+            const duckSize = duckCount > 6 ? Math.min(50, 300 / Math.ceil(Math.sqrt(duckCount))) : 50;
+            
+            for (let i = 0; i < duckCount; i++) {
+                const duck = document.createElement('div');
+                duck.className = 'duck';
+                duck.style.width = duckSize + 'px';
+                duck.style.height = duckSize + 'px';
+                duck.textContent = '🦆';
+                container.appendChild(duck);
+            }
+        }
+
+        function disableDice() {
+            const dices = document.querySelectorAll('.dice');
+            dices.forEach(dice => {
+                dice.classList.add('disabled');
+                dice.style.pointerEvents = 'none';
+            });
+        }
+
+        function enableDice() {
+            const dices = document.querySelectorAll('.dice');
+            dices.forEach(dice => {
+                dice.classList.remove('disabled');
+                dice.style.pointerEvents = 'auto';
+            });
+        }
+
+        function selectNumber(number) {
+            if (!gameActive) return;
+
+            if (confirm(`是否確定選擇 ${number} 點？`)) {
+                document.getElementById('cup').classList.add('revealed');
+                document.getElementById('hiddenNumber').style.color = 'black';
+                document.getElementById('hiddenNumber').textContent = hiddenNumber;
+
+                if (number === hiddenNumber) {
+                    alert('恭喜！');
+                    duckCount++;
+                } else {
+                    disableDice();
+                    setTimeout(() => {
+                        alert('輸鴨中~');
+                        duckCount--;
+                        updateDucks();
+                        
+                        if (duckCount <= 0) {
+                            alert('你輸鴨輸得徹底阿');
+                            if (confirm('我是賭徒，再次遊玩')) {
+                                initGame();
+                            } else {
+                                gameActive = false;
+                            }
+                        } else {
+                            setTimeout(() => {
+                                document.getElementById('cup').classList.remove('revealed');
+                                document.getElementById('hiddenNumber').style.color = 'white';
+                                generateHiddenNumber();
+                                enableDice();
+                            }, 2000);
+                        }
+                    }, 500);
+                    return;
+                }
+
+                updateDucks();
+
+                if (duckCount <= 0) {
+                    alert('你輸鴨輸得徹底阿');
+                    if (confirm('我是賭徒，再次遊玩')) {
+                        initGame();
+                    } else {
+                        gameActive = false;
+                    }
+                } else {
+                    setTimeout(() => {
+                        document.getElementById('cup').classList.remove('revealed');
+                        document.getElementById('hiddenNumber').style.color = 'white';
+                        generateHiddenNumber();
+                    }, 2000);
+                }
+            }
+        }
+
+        // 初始化遊戲
+        initGame();
+    </script>
+</body>
+</html>
