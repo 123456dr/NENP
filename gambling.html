@@ -41,15 +41,23 @@
             flex-wrap: wrap;
             padding: 10px;
             gap: 5px;
+            align-content: flex-start;
+            overflow: hidden;
         }
         .duck {
-            width: 50px;
-            height: 50px;
-            background-color: yellow;
+            background-color: transparent;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            margin: 2px;
+        }
+        .duck img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .dice-container {
             display: flex;
@@ -254,6 +262,7 @@ NO ERROR NO PAIN</h1>
     </script>
 
 
+    <h2>鴨力爆框算你厲害  <small>(賭徒歡迎)</small></h2>
 
     <div class="top-container">
         <div class="cup" id="cup">
@@ -293,14 +302,52 @@ NO ERROR NO PAIN</h1>
         function updateDucks() {
             const container = document.getElementById('duckContainer');
             container.innerHTML = '';
-            const duckSize = duckCount > 6 ? Math.min(50, 300 / Math.ceil(Math.sqrt(duckCount))) : 50;
             
+            // 計算容器的可用空間
+            const containerWidth = container.clientWidth - 20; // 減去padding
+            const containerHeight = container.clientHeight - 20;
+            
+            // 計算最佳的行數和列數
+            const aspectRatio = containerWidth / containerHeight;
+            const totalDucks = duckCount;
+            
+            // 嘗試找出最佳的行列配置
+            let bestRows = 1;
+            let bestCols = totalDucks;
+            let bestSize = 0;
+            
+            for (let rows = 1; rows <= totalDucks; rows++) {
+                const cols = Math.ceil(totalDucks / rows);
+                const maxWidth = containerWidth / cols;
+                const maxHeight = containerHeight / rows;
+                const size = Math.min(maxWidth, maxHeight);
+                
+                if (size > bestSize) {
+                    bestSize = size;
+                    bestRows = rows;
+                    bestCols = cols;
+                }
+            }
+            
+            // 計算實際的鴨子大小（考慮間距和最大限制）
+            const MAX_DUCK_SIZE = 50; // 設置最大尺寸為50px
+            const duckSize = Math.min(Math.floor(bestSize - 4), MAX_DUCK_SIZE); // 減去margin並限制最大尺寸
+            
+            // 創建鴨子元素
             for (let i = 0; i < duckCount; i++) {
                 const duck = document.createElement('div');
                 duck.className = 'duck';
                 duck.style.width = duckSize + 'px';
                 duck.style.height = duckSize + 'px';
-                duck.textContent = '🦆';
+                
+                const img = document.createElement('img');
+                img.src = 'duck.jpg';
+                img.alt = '鴨子';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                
+                duck.appendChild(img);
                 container.appendChild(duck);
             }
         }
@@ -376,6 +423,9 @@ NO ERROR NO PAIN</h1>
 
         // 初始化遊戲
         initGame();
+
+        // 添加視窗大小改變事件監聽器
+        window.addEventListener('resize', updateDucks);
     </script>
 </body>
 </html>
