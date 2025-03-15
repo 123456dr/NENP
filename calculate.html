@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>隨機運算計算機</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        #log { margin-top: 20px; text-align: left; display: inline-block; }
+        
+        /* 添加浮動提示框樣式 */
+        .tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <h2>輸入四則運算<small>(不得輸入未知數)</small></h2>
+    <input type="text" id="expression" placeholder="輸入四則運算">
+    <button onclick="calculate()">計算</button>
+    <h4>交給俺</h4>
+    <div id="log"></div>
+    
+    <script>
+        let show_ans = 0;
+        let globalWW;
+        let clickListener = null;
+
+        // 創建新的提示框
+        function createTooltip(x, y, text) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = text;
+            tooltip.style.left = (x + 10) + 'px';
+            tooltip.style.top = (y + 10) + 'px';
+            document.body.appendChild(tooltip);
+        }
+
+        function calculate() {
+            // 如果之前有监听器，先移除它
+            if (clickListener) {
+                document.removeEventListener('click', clickListener);
+                clickListener = null;
+            }
+
+            show_ans = 0;
+            let expression = document.getElementById("expression").value;
+            
+            // 验证输入是否只包含数字和运算符号
+            if (!/^[0-9+\-*/\s.()]+$/.test(expression)) {
+                alert("you are bad guy");
+                return;
+            }
+            
+            let ans = eval(expression);  // 計算初始結果
+            let y = ans;
+            //let log = `初始值: y = ${ans}<br>`;
+            let logfront = '';
+            let log = ``;
+            let operations = ['+', '-', '*', '/'];
+            let usedOperations = [];
+            let is_first=1;
+            while (operations.length > 0) {
+                let index = Math.floor(Math.random() * operations.length);
+                let op = operations.splice(index, 1)[0];
+                let x = Math.floor(Math.random() * 1000) + 1;
+                let oldY = y;  
+                if(is_first==1)y=x;
+
+                switch (op) {
+                    case '+': y += x; break;
+                    case '-': y -= x; break;
+                    case '*': y *= x; break;
+                    case '/': y = x !== 0 ? y / x : y; break;
+                }
+                usedOperations.push(op);
+
+                if((is_first===0) && (op=='*' || op=='/')){
+                    logfront += `( `;
+                }
+                if((is_first===0) && (op=='*' || op=='/')){
+                    log += ` ) `;
+                }
+                if(is_first==1)log+=`${x}`;
+                log += `${op} ${x}`;
+                is_first=0;
+
+                
+            }
+            let ww;
+            if (y !== ans) {
+                let z = Math.abs(y - ans);
+                if((y - ans)!==z) log += `+${z}`,ww=y+z;
+                else log += `-${z}`,ww=y-z;
+                
+                globalWW = ww; // 存储答案到全局变量
+                log += ` &nbsp;&nbsp;&nbsp; (耶 <br>`;
+            }
+/*
+            for(let i=0; i<log.length; i++){
+                if(log[i]=='/' || log[i]=='*'){
+                    字串log的最前方插入'(';
+                    字串log[i]的後方插入')';
+                    i++;
+                }
+            }
+*/
+            logfront+=log;
+            log='答案為 = '+logfront;
+            //document.getElementById("logfront").innerHTML = logfront;
+            show_ans=1;
+            document.getElementById("log").innerHTML = log;
+            
+            // 在输出log后才添加点击事件监听器
+            setTimeout(() => {
+                clickListener = function(event) {
+                    // 忽略按鈕的点击事件
+                    if (event.target.tagName === 'BUTTON') {
+                        return;
+                    }
+                    
+                    if (show_ans == 1 && globalWW !== undefined) {
+                        // 在點擊位置創建新的提示框
+                        createTooltip(event.pageX, event.pageY, `哈哈！答案在這 ${globalWW}`);
+                    }
+                };
+                document.addEventListener('click', clickListener);
+            }, 100);
+        }
+    </script>
+</body>
+</html>
