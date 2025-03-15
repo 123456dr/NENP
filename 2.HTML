@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>抓鴨子</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    #timeSelection {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
+    #gameScreen {
+      display: none;
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      background-color: #ffffff;
+    }
+    #timerDisplay {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 5px 10px;
+      border-radius: 5px;
+      z-index: 1000;
+    }
+    #player {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-image: url('M2.jpg');
+      background-size: cover;
+    }
+    .willy {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-size: cover;
+    }
+    #timeSelect {
+    font-size: 24px; /* 增大字體大小 */
+    padding: 10px;   /* 增加內部間距以提升可讀性 */
+    margin-top: 10px;
+  }
+
+  #startButton {
+    font-size: 20px; /* 按鈕字體大小也稍作調整 */
+    padding: 10px 20px;
+    margin-top: 20px;
+    cursor: pointer;
+  }
+  </style>
+</head>
+<body>
+  <!-- 時間選擇頁面 -->
+  <div id="timeSelection">
+    <h1>抓鴨子</h1>
+    <div id="gameDescription">
+      遊戲說明：<br>
+      抓鴨子，追逐鴨子當鼠標靠近鴨子時，鴨子會快速逃跑。<br>
+      如果您的速度超過鴨子並撞擊它們，鴨子將會消失。<br>
+      如果時間結束前消滅所有鴨子，那你將獲勝！<br>
+      如果時間內仍有鴨子存活，那麼你將失敗鴨子獲勝。
+    </div>
+    <label for="timeSelect">選擇倒數時間：</label>
+    <select id="timeSelect">
+      <option value="10">10秒鐘</option>
+      <option value="20">20秒鐘</option>
+      <option value="30">30秒鐘</option>
+      <option value="60">1分鐘</option>
+      <option value="120">2分鐘</option>
+    </select>
+    <button id="startButton">開始遊戲</button>
+  </div>
+
+  <!-- 遊戲頁面 -->
+  <div id="gameScreen">
+    <div id="timerDisplay">剩餘時間：0秒</div>
+    <div id="player"></div>
+  </div>
+
+  <script src="2.js"></script>
+</body>
+</html>
