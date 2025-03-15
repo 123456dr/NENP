@@ -544,7 +544,10 @@ NO ERROR NO PAIN</h1>
                         
                         if (duckCount <= 0) {
                             setTimeout(() => {
-                                if (confirm('你輸鴨輸得徹底阿\n我是賭徒，再次遊玩')) {
+                                alert('你輸鴨輸得徹底阿')
+                            }, 100);
+                            setTimeout(() => {
+                                if (confirm('我是賭徒，再次遊玩')) {
                                     initGame();
                                 } else {
                                     gameActive = false;
