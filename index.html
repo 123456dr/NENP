@@ -174,30 +174,33 @@
         .menu-overlay {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
+            left: -100%;
+            width: 400px;
+            height: 100vh;
             background-color: rgba(30, 30, 30, 0.95);
             border-radius: 0 25px 25px 0;
             z-index: 9998;
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             padding: 100px 0 50px 50px;
+            visibility: hidden;
         }
 
         .menu-overlay.active {
-            width: 400px;
-            height: 500px;
+            left: 0;
+            visibility: visible;
         }
 
         .menu-items {
             opacity: 0;
-            transition: opacity 0.3s ease;
-            transition-delay: 0.2s;
+            transform: translateX(-20px);
+            transition: all 0.3s ease;
         }
 
         .menu-overlay.active .menu-items {
             opacity: 1;
+            transform: translateX(0);
         }
 
         .menu-items a {
@@ -217,6 +220,16 @@
             background-color: rgba(255, 255, 255, 0.2);
             transform: translateX(10px);
         }
+
+        @media (max-width: 480px) {
+            .menu-overlay.active {
+                width: 100%;
+            }
+            
+            .menu-items a {
+                width: 90%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -234,6 +247,7 @@
                 <a href="greentoeye.html">GGTE</a>
                 <a href="pdf.html">PDF</a>
                 <a href="paperss.html">PSS</a>
+                <a href="classboard.html" target="_blank">班級記事板</a>
                 <a href="gambling.html" target="_blank">賭鴨賭呀</a>
                 <a href="1.html" target="_blank">彈射臉臉</a>
 
@@ -267,11 +281,19 @@ NO ERROR NO PAIN</h1>
                 <div class="overlay">PDF</div>
             </a>
             <a href="paperss.html" class="nav-item">
-                <img src="https://picsum.photos/300/180?random=4">
+                <img src="https://picsum.photos/300/180?random=9">
                 <div class="overlay">PSS</div>
             </a>
+            <a href="classboard.html" target="_blank"  class="nav-item">
+                <img src="https://picsum.photos/300/180?random=6">
+                <div class="overlay">班級記事版</div>
+            </a>
+            <a href="gambling.html" class="nav-item">
+                <img src="https://picsum.photos/300/180?random=6">
+                <div class="overlay">賭鴨賭呀</div>
+            </a>
             <a href="1.html" target="_blank" class="nav-item">
-                <img src="https://picsum.photos/300/180?random=4">
+                <img src="https://picsum.photos/300/180?random=7">
                 <div class="overlay">彈射臉臉</div>
             </a>
         </div>
@@ -280,7 +302,15 @@ NO ERROR NO PAIN</h1>
     <script>
         function toggleMenu() {
             const menuOverlay = document.querySelector('.menu-overlay');
+            const hamburger = document.querySelector('.hamburger');
             menuOverlay.classList.toggle('active');
+            
+            // 點擊漢堡按鈕以外的地方時關閉菜單
+            document.addEventListener('click', function(event) {
+                if (!menuOverlay.contains(event.target) && !hamburger.contains(event.target)) {
+                    menuOverlay.classList.remove('active');
+                }
+            });
         }
     </script>
 </body>

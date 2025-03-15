@@ -185,6 +185,10 @@
 </head>
 <body>
   <div class="calendar-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <button onclick="navigateWeek(-1)" style="padding: 8px 15px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">上一禮拜</button>
+      <button onclick="navigateWeek(1)" style="padding: 8px 15px; border: none; border-radius: 5px; background-color: #007bff; color: white; cursor: pointer;">下一禮拜</button>
+    </div>
     <div class="week-header">
       <div>日</div>
       <div>一</div>
@@ -226,9 +230,17 @@
     let selectedType = null;
     let events = [];
     
+    let currentStartDate = new Date();
+    
+    function navigateWeek(direction) {
+      currentStartDate.setDate(currentStartDate.getDate() + (direction * 7));
+      updateCalendarGrid(currentStartDate);
+      loadEvents();
+    }
+    
     function initializeCalendar() {
-      const today = new Date();
-      updateCalendarGrid(today);
+      currentStartDate = new Date();
+      updateCalendarGrid(currentStartDate);
       loadEvents();
     }
     

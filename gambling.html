@@ -28,9 +28,10 @@
             align-items: center;
             cursor: pointer;
             transition: transform 0.3s;
+            position: relative;
         }
         .cup.revealed {
-            transform: translateY(-50px);
+            transform: translateY(-100px);
         }
         .duck-container {
             width: 300px;
@@ -77,11 +78,183 @@
         }
         .hidden-number {
             font-size: 36px;
+            color: black;
+            position: absolute;
+            top: 220px;
+            background-color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid black;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .cup.revealed .hidden-number {
+            opacity: 1;
+        }
+        body { font-family: Arial, sans-serif; text-align: center; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        #log { margin-top: 20px; text-align: left; display: inline-block; }
+        
+        /* 添加浮動提示框樣式 */
+        .tooltip {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
             color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding-top: 60px; /* 為固定導航欄留出空間 */
+        }
+
+        .header {
+            background-color: rgba(51, 51, 51, 0.95);
+            padding: 0.5rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            height: 50px; /* 固定高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hamburger {
+            width: 30px; /* 縮小漢堡按鈕 */
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: fixed;
+            top: 10px; /* 調整位置 */
+            left: 10px;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px; /* 縮小內邊距 */
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px; /* 縮小線條高度 */
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 50px; /* 從導航欄下方開始 */
+            left: 0;
+            width: 0;
+            height: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            z-index: 998;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-overlay.active {
+            width: 200px; /* 縮小選單寬度 */
+            height: auto;
+            max-height: calc(100vh - 50px); /* 最大高度為視窗高度減去導航欄高度 */
+        }
+
+        .menu-items {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-items a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .menu-overlay.active .menu-items {
+            opacity: 1;
+        }
+
+        /* 主要內容區域的樣式 */
+        .main-content {
+            padding: 20px;
+            margin-top: 20px; /* 調整與導航欄的間距 */
+        }
+
+        /* 確保所有內容都在導航欄下方 */
+        h2, input, button, h4, #log {
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
 <body>
+    <header class="header">
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="menu-overlay">
+            <div class="menu-items">
+                <a href="./">首頁</a>
+                <a href="calculate.html">幫倒忙計算機</a>
+                <a href="51121bobibo.html">51121bobibo</a>
+                <a href="greentoeye.html">GGTE</a>
+                <a href="pdf.html">PDF</a>
+                <a href="paperss.html">PSS</a>
+                <a href="classboard.html" target="_blank">班級記事板</a>
+                <a href="gambling.html" target="_blank">賭鴨賭呀</a>
+                <a href="1.html" target="_blank">彈射臉臉</a>
+
+                
+                <a href="https://www.canva.com/design/DAGhwiMS-qU/yH-SR3u3JeM6H0JNXovNRQ/view?utm_content=DAGhwiMS-qU&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=he822c5f56f">CANVA</a>
+
+            </div>
+        </div>
+
+        <h1>NENP
+NO ERROR NO PAIN</h1>
+    </header>
+
+    <script>
+        function toggleMenu() {
+            const menuOverlay = document.querySelector('.menu-overlay');
+            menuOverlay.classList.toggle('active');
+        }
+    </script>
+
+
+
     <div class="top-container">
         <div class="cup" id="cup">
             <span class="hidden-number" id="hiddenNumber"></span>
@@ -109,7 +282,6 @@
             document.getElementById('cup').classList.remove('revealed');
             updateDucks();
             generateHiddenNumber();
-            document.getElementById('hiddenNumber').style.color = 'white';
             enableDice();
         }
 
@@ -154,7 +326,6 @@
 
             if (confirm(`是否確定選擇 ${number} 點？`)) {
                 document.getElementById('cup').classList.add('revealed');
-                document.getElementById('hiddenNumber').style.color = 'black';
                 document.getElementById('hiddenNumber').textContent = hiddenNumber;
 
                 if (number === hiddenNumber) {
@@ -163,7 +334,7 @@
                 } else {
                     disableDice();
                     setTimeout(() => {
-                        alert('輸鴨中~');
+                        alert('錯了 鴨力-1');
                         duckCount--;
                         updateDucks();
                         
@@ -177,10 +348,9 @@
                         } else {
                             setTimeout(() => {
                                 document.getElementById('cup').classList.remove('revealed');
-                                document.getElementById('hiddenNumber').style.color = 'white';
                                 generateHiddenNumber();
                                 enableDice();
-                            }, 2000);
+                            }, 200);
                         }
                     }, 500);
                     return;
@@ -198,7 +368,6 @@
                 } else {
                     setTimeout(() => {
                         document.getElementById('cup').classList.remove('revealed');
-                        document.getElementById('hiddenNumber').style.color = 'white';
                         generateHiddenNumber();
                     }, 2000);
                 }
