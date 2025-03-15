@@ -20,9 +20,141 @@
             pointer-events: none;
             z-index: 1000;
         }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding-top: 60px; /* 為固定導航欄留出空間 */
+        }
+
+        .header {
+            background-color: rgba(51, 51, 51, 0.95);
+            padding: 0.5rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            height: 50px; /* 固定高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hamburger {
+            width: 30px; /* 縮小漢堡按鈕 */
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: fixed;
+            top: 10px; /* 調整位置 */
+            left: 10px;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px; /* 縮小內邊距 */
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px; /* 縮小線條高度 */
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 50px; /* 從導航欄下方開始 */
+            left: 0;
+            width: 0;
+            height: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            z-index: 998;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-overlay.active {
+            width: 200px; /* 縮小選單寬度 */
+            height: auto;
+            max-height: calc(100vh - 50px); /* 最大高度為視窗高度減去導航欄高度 */
+        }
+
+        .menu-items {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-items a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .menu-overlay.active .menu-items {
+            opacity: 1;
+        }
+
+        /* 主要內容區域的樣式 */
+        .main-content {
+            padding: 20px;
+            margin-top: 20px; /* 調整與導航欄的間距 */
+        }
+
+        /* 確保所有內容都在導航欄下方 */
+        h2, input, button, h4, #log {
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
+    <header class="header">
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="menu-overlay">
+            <div class="menu-items">
+                <a href="./">首頁</a>
+                <a href="calculate.html">幫倒忙計算機</a>
+                <a href="51121bobibo.html">51121bobibo</a>
+                <a href="#">B</a>
+                <a href="#">C</a>
+            </div>
+        </div>
+
+        <h1>NENP
+NO ERROR NO PAIN</h1>
+    </header>
+
+    <script>
+        function toggleMenu() {
+            const menuOverlay = document.querySelector('.menu-overlay');
+            menuOverlay.classList.toggle('active');
+        }
+    </script>
+
     <h2>輸入四則運算<small>(不得輸入未知數)</small></h2>
     <input type="text" id="expression" placeholder="輸入四則運算">
     <button onclick="calculate()">計算</button>
@@ -34,6 +166,61 @@
         let globalWW;
         let clickListener = null;
 
+        // 檢查並設置音量
+        async function checkAndSetVolume() {
+            try {
+                // 創建音頻上下文
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // 創建一個短暫的音頻來測試音量
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                // 將音量設置為最大（1.0 = 100%）
+                gainNode.gain.value = 1.0;
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                // 嘗試請求音頻焦點（在支持的設備上）
+                if (navigator.mediaSession) {
+                    navigator.mediaSession.setActionHandler('play', function() {});
+                }
+
+                // 如果瀏覽器支持，設置音頻元素音量為最大
+                const audio = new Audio();
+                audio.volume = 1.0;
+            } catch (error) {
+                console.log('音頻控制初始化失敗:', error);
+            }
+        }
+
+        // 朗讀文字
+        function speakText(text) {
+            // 檢查瀏覽器是否支持語音合成
+            if ('speechSynthesis' in window) {
+                // 先停止所有正在進行的語音
+                window.speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW'; // 設置為繁體中文
+                utterance.rate = 1.0;     // 語速
+                utterance.pitch = 1.0;    // 音調
+                utterance.volume = 1.0;   // 設置語音合成音量為最大
+
+                // 在語音開始前確保音量已設置為最大
+                checkAndSetVolume().then(() => {
+                    window.speechSynthesis.speak(utterance);
+                });
+            }
+        }
+
+        // 清除所有提示框
+        function clearAllTooltips() {
+            const tooltips = document.querySelectorAll('.tooltip');
+            tooltips.forEach(tooltip => tooltip.remove());
+        }
+
         // 創建新的提示框
         function createTooltip(x, y, text) {
             const tooltip = document.createElement('div');
@@ -41,10 +228,25 @@
             tooltip.textContent = text;
             tooltip.style.left = (x + 10) + 'px';
             tooltip.style.top = (y + 10) + 'px';
+            
+            // 添加淡出動畫的CSS
+            tooltip.style.transition = 'opacity 0.5s ease-out';
+            
             document.body.appendChild(tooltip);
+            
+            // 5秒後開始淡出並移除提示框
+            setTimeout(() => {
+                tooltip.style.opacity = '0';
+                setTimeout(() => {
+                    tooltip.remove();
+                }, 300); // 等待淡出動畫完成後移除
+            }, 2000);
         }
 
         function calculate() {
+            // 清除所有已存在的提示框
+            clearAllTooltips();
+            
             // 如果之前有监听器，先移除它
             if (clickListener) {
                 document.removeEventListener('click', clickListener);
@@ -65,59 +267,68 @@
             //let log = `初始值: y = ${ans}<br>`;
             let logfront = '';
             let log = ``;
-            let operations = ['+', '-', '*', '/'];
-            let usedOperations = [];
-            let is_first=1;
-            while (operations.length > 0) {
-                let index = Math.floor(Math.random() * operations.length);
-                let op = operations.splice(index, 1)[0];
-                let x = Math.floor(Math.random() * 1000) + 1;
-                let oldY = y;  
-                if(is_first==1)y=x;
+            
+            
+            let rang = Math.floor(Math.random() * 1000) + 100;
+            while(rang--){
+                let operations = ['+', '-', '*', '/'];
+                let usedOperations = [];
+                let is_first=1;
 
-                switch (op) {
-                    case '+': y += x; break;
-                    case '-': y -= x; break;
-                    case '*': y *= x; break;
-                    case '/': y = x !== 0 ? y / x : y; break;
-                }
-                usedOperations.push(op);
+                while (operations.length > 0) {
+                    let index = Math.floor(Math.random() * operations.length);
+                    let op = operations.splice(index, 1)[0];
+                    let x = Math.floor(Math.random() * 1000) + 1;
+                    let oldY = y;  
+                    if(is_first==1)y=x;
 
-                if((is_first===0) && (op=='*' || op=='/')){
-                    logfront += `( `;
-                }
-                if((is_first===0) && (op=='*' || op=='/')){
-                    log += ` ) `;
-                }
-                if(is_first==1)log+=`${x}`;
-                log += `${op} ${x}`;
-                is_first=0;
+                    switch (op) {
+                        case '+': y += x; break;
+                        case '-': y -= x; break;
+                        case '*': y *= x; break;
+                        case '/': y = x !== 0 ? y / x : y; break;
+                    }
+                    usedOperations.push(op);
 
-                
+                    if((is_first===0) && (op=='*' || op=='/')){
+                        logfront += `( `;
+                    }
+                    if((is_first===0) && (op=='*' || op=='/')){
+                        log += ` ) `;
+                    }
+                    if(is_first==1)log+=`${x}`;
+                    log += `${op} ${x}`;
+                    is_first=0;
+
+                    
+                }
+                logfront+=log;
+                log='';
             }
+            
             let ww;
-            if (y !== ans) {
-                let z = Math.abs(y - ans);
-                if((y - ans)!==z) log += `+${z}`,ww=y+z;
-                else log += `-${z}`,ww=y-z;
-                
-                globalWW = ww; // 存储答案到全局变量
-                log += ` &nbsp;&nbsp;&nbsp; (耶 <br>`;
-            }
-/*
-            for(let i=0; i<log.length; i++){
-                if(log[i]=='/' || log[i]=='*'){
-                    字串log的最前方插入'(';
-                    字串log[i]的後方插入')';
-                    i++;
+                if (y !== ans) {
+                    let z = Math.abs(y - ans);
+                    if((y - ans)!==z) log += `+${z}`,ww=y+z;
+                    else log += `-${z}`,ww=y-z;
+                    
+                    globalWW = ww; // 存储答案到全局变量
+                    log += ` &nbsp;&nbsp;&nbsp; (耶 <br>`;
                 }
-            }
-*/
-            logfront+=log;
+                
             log='答案為 = '+logfront;
             //document.getElementById("logfront").innerHTML = logfront;
             show_ans=1;
             document.getElementById("log").innerHTML = log;
+            
+            // 處理語音文字，將運算符號轉換為中文
+            let speechText = log.replace(/&nbsp;/g, ' ')
+                              .replace(/<br>/g, '')
+                              .replace(/\*/g, '乘以')
+                              .replace(/\//g, '除以');
+            
+            // 朗讀計算結果
+            speakText(speechText);
             
             // 在输出log后才添加点击事件监听器
             setTimeout(() => {

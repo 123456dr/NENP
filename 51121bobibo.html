@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>51121BoBiBo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/CCapture.js/1.1.0/CCapture.all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            margin: 0;
+            text-align: center; 
+            font-family: Arial, sans-serif; 
+            background: #f0f0f0;
+            min-height: 100vh;
+            padding-top: 60px;
+        }
+
+        .container { 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            gap: 20px; 
+            padding: 20px;
+            flex-wrap: wrap;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #canvas-container {
+            width: 400px;
+            height: 400px;
+            border: 2px solid black;
+            background: #fff;
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .controls { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 300px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .shape-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button.active {
+            background: #2E7D32;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        .music-controls {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .music-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .music-button {
+            padding: 6px 12px;
+            background: #2196F3;
+        }
+
+        .music-button.active {
+            background: #1976D2;
+        }
+
+        .speed-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .speed-controls label {
+            margin-right: 5px;
+        }
+
+        .speed-controls input[type="range"] {
+            flex: 1;
+        }
+
+        .speed-button {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: #2196F3;
+        }
+
+        .image-upload { 
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fullscreen-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-button:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .fullscreen-button svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        #canvas-container.fullscreen {
+            width: 100% !important;
+            height: 100% !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            border: none;
+            border-radius: 0;
+        }
+
+        .download-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #4CAF50;
+            margin: 10px auto;
+        }
+
+        .download-button svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dialog-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 80%;
+            max-height: 80vh;
+            overflow: auto;
+        }
+
+        .preview-video {
+            max-width: 100%;
+            max-height: 60vh;
+            margin: 10px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .watermark {
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 1000;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .header {
+            background-color: rgba(51, 51, 51, 0.95);
+            padding: 0.5rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hamburger {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px;
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            width: 0;
+            height: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            z-index: 998;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-overlay.active {
+            width: 200px;
+            height: auto;
+            max-height: calc(100vh - 50px);
+        }
+
+        .menu-items {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-items a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .menu-overlay.active .menu-items {
+            opacity: 1;
+        }
+
+        .disabled-button {
+            background-color: #cccccc !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media screen and (max-width: 726px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            #canvas-container {
+                width: 90%;
+                max-width: 400px;
+                height: auto;
+                aspect-ratio: 1;
+                margin-bottom: 20px;
+            }
+            
+            .controls {
+                width: 90%;
+                max-width: 400px;
+            }
+            
+            .shape-controls, .music-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .image-upload {
+                width: 100%;
+            }
+            
+            .image-upload label {
+                display: block;
+                margin-bottom: 10px;
+            }
+            
+            .speed-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .speed-controls input[type="range"] {
+                width: 100%;
+                margin: 10px 0;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+                margin: 10px 0;
+            }
+            
+            .download-button {
+                background-color: #cccccc !important;
+                cursor: not-allowed !important;
+                opacity: 0.7;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <header class="header">
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+
+        <div class="menu-overlay">
+            <div class="menu-items">
+                <a href="./">首頁</a>
+                <a href="calculate.html">幫倒忙計算機</a>
+                <a href="51121bobibo.html">51121bobibo</a>
+                <a href="#">B</a>
+                <a href="#">C</a>
+            </div>
+        </div>
+
+        <h1>NENP
+NO ERROR NO PAIN</h1>
+    </header>
+
+    <script>
+        function toggleMenu() {
+            const menuOverlay = document.querySelector('.menu-overlay');
+            menuOverlay.classList.toggle('active');
+        }
+    </script>
+
+
+    <h2>51121BoBiBo</h2>
+    <div class="container">
+        <div id="canvas-container">
+            <button class="fullscreen-button" onclick="toggleFullscreen()" title="全螢幕">
+                <svg viewBox="0 0 24 24">
+                    <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="controls">
+            <div class="shape-controls">
+                <button onclick="setShape('sphere')" id="sphereBtn" class="active">圓形</button>
+                <button onclick="setShape('ellipsoid')" id="ellipsoidBtn">橢圓形</button>
+            </div>
+            <button onclick="toggleRotation()">開始/暫停旋轉</button>
+            
+            <div class="speed-controls">
+            <label for="speedControl">旋轉速度:</label>
+                <input type="range" id="speedControl" min="1" max="30" value="2" step="2" oninput="updateSpeed()">
+                <button onclick="toggleSpeed()" class="speed-button" id="speedToggleBtn">我要更快快快</button>
+            </div>
+
+            <div class="music-controls">
+                <label>選擇音樂:</label>
+                <div class="music-buttons" id="musicButtons">
+                    <button onclick="changeMusic('music1')" class="music-button active" id="music1Btn">音樂1</button>
+                    <button onclick="changeMusic('music2')" class="music-button" id="music2Btn">音樂2</button>
+                </div>
+            </div>
+            
+            <button onclick="showDownloadDialog()" class="download-button">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                </svg>
+                下載短影片
+            </button>
+            
+            <div class="image-upload">
+                <label>上傳左半部圖片: <input type="file" id="uploadLeft" accept="image/*"></label>
+                <label>上傳右半部圖片: <input type="file" id="uploadRight" accept="image/*"></label>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="downloadDialog">
+        <div class="dialog-box">
+            <h3>確認是否下載影片??!</h3>
+            <div class="dialog-buttons">
+                <button onclick="startRecording()">下載</button>
+                <button onclick="hideDialog('downloadDialog')">忍痛放棄</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="thankDialog">
+        <div class="dialog-box">
+            <h3>感謝下載</h3>
+            <div class="dialog-buttons">
+                <button onclick="hideDialog('thankDialog')">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="downloadingDialog">
+        <div class="dialog-box">
+            <h3>下載中請稍後...</h3>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="previewDialog">
+        <div class="dialog-box">
+            <h3>預覽影片</h3>
+            <video id="previewVideo" class="preview-video" controls></video>
+            <div class="dialog-buttons">
+                <button onclick="downloadVideo()">確認下載</button>
+                <button onclick="hideDialog('previewDialog')">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer;
+        let isRotating = false;
+        let rotationSpeed = 0.02;
+        let textureLeft, textureRight;
+        let materialLeft, materialRight;
+        let leftHalf, rightHalf;
+        let currentShape = 'sphere';
+        let savedMaterials = {
+            sphere: { left: null, right: null },
+            ellipsoid: { left: null, right: null }
+        };
+        
+        // 音乐配置
+        const musicList = {
+            music1: {
+                src: 'Green Screen Spinning Cat Meme _ OIIAIOIIIAI Meme.mp3',
+                title: '音樂1'
+            },
+            music2: {
+                src: 'bo bi bo bi bo bo bi bo cat.mp3',
+                title: '音樂2'
+            }
+        };
+        
+        let currentMusic = 'music1';
+        let bgMusic = null;
+        let isHighSpeed = false;  
+        
+        let capturer = null;
+        let isRecording = false;
+        let recordingFrames = 0;
+        const RECORD_FPS = 30;
+        const RECORD_DURATION = 10;
+        let mediaRecorder = null;
+        let audioContext = null;
+        let audioDestination = null;
+        let recordedChunks = [];
+        let currentVideoBlob = null;
+        
+        // 初始化音频
+        function initAudio() {
+            if (bgMusic) {
+                bgMusic.pause();
+                bgMusic = null;
+            }
+            
+            bgMusic = new Audio(musicList[currentMusic].src);
+            bgMusic.loop = true;
+            bgMusic.volume = 0.5;
+            
+            bgMusic.addEventListener('error', (e) => {
+                console.error('音频加载错误：', e);
+                alert('音频加载失败，请检查文件是否存在');
+            });
+            
+            return new Promise((resolve, reject) => {
+                bgMusic.addEventListener('canplaythrough', resolve);
+                bgMusic.addEventListener('error', reject);
+            });
+        }
+        
+        init();
+        animate();
+
+        async function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            camera.position.z = 3;
+
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                preserveDrawingBuffer: true // 为录制视频必需
+            });
+            renderer.setSize(400, 400);
+            const container = document.getElementById('canvas-container');
+            container.appendChild(renderer.domElement);
+
+            // 水印
+            const watermark = document.createElement('div');
+            watermark.className = 'watermark';
+            watermark.textContent = 'Made by RC';
+            container.appendChild(watermark);
+
+            // 初始化形状和材质
+            createShape('sphere');
+            await loadSavedTextures();
+            
+            // 初始化音频
+            try {
+                await initAudio();
+            } catch (error) {
+                console.error('音频初始化失败：', error);
+            }
+            
+            // 事件监听器
+            window.addEventListener('resize', handleResize);
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+            
+            handleResize();
+            updateDownloadButtonState();
+        }
+
+        function createShape(shapeType) {
+            if (materialLeft && materialLeft.map) {
+                savedMaterials[currentShape].left = materialLeft.map;
+            }
+            if (materialRight && materialRight.map) {
+                savedMaterials[currentShape].right = materialRight.map;
+            }
+
+            if (leftHalf) scene.remove(leftHalf);
+            if (rightHalf) scene.remove(rightHalf);
+
+            let scaleX = shapeType === 'ellipsoid' ? 1.5 : 1;
+            let scaleY = 1;
+            let scaleZ = shapeType === 'ellipsoid' ? 0.8 : 1;
+
+            const geometryLeft = new THREE.SphereGeometry(1, 32, 32, 0, Math.PI);
+            materialLeft = new THREE.MeshBasicMaterial({
+                side: THREE.DoubleSide,
+                color: 0xcccccc
+            });
+            
+            if (savedMaterials[shapeType].left) {
+                materialLeft.map = savedMaterials[shapeType].left;
+                materialLeft.needsUpdate = true;
+            }
+            
+            leftHalf = new THREE.Mesh(geometryLeft, materialLeft);
+            leftHalf.scale.set(scaleX, scaleY, scaleZ);
+            scene.add(leftHalf);
+
+            const geometryRight = new THREE.SphereGeometry(1, 32, 32, Math.PI, Math.PI);
+            materialRight = new THREE.MeshBasicMaterial({
+                side: THREE.DoubleSide,
+                color: 0xcccccc
+            });
+            
+            if (savedMaterials[shapeType].right) {
+                materialRight.map = savedMaterials[shapeType].right;
+                materialRight.needsUpdate = true;
+            }
+            
+            rightHalf = new THREE.Mesh(geometryRight, materialRight);
+            rightHalf.scale.set(scaleX, scaleY, scaleZ);
+            scene.add(rightHalf);
+
+            document.getElementById('sphereBtn').classList.toggle('active', shapeType === 'sphere');
+            document.getElementById('ellipsoidBtn').classList.toggle('active', shapeType === 'ellipsoid');
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (isRotating) {
+                scene.rotation.y += rotationSpeed;
+            }
+            
+            renderer.render(scene, camera);
+            
+            if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
+                recordingFrames++;
+                
+                if (recordingFrames >= RECORD_FPS * RECORD_DURATION) {
+                    stopRecording();
+                }
+            }
+        }
+
+        async function toggleRotation() {
+            isRotating = !isRotating;
+            
+            if (isRotating) {
+                try {
+                    await bgMusic.play();
+                } catch (error) {
+                    console.error('音乐播放失败：', error);
+                    alert('音乐播放失败，请检查浏览器设置');
+                }
+            } else {
+                bgMusic.pause();
+                bgMusic.currentTime = 0;
+            }
+        }
+
+        async function changeMusic(musicId) {
+            const wasPlaying = !bgMusic.paused;
+            currentMusic = musicId;
+            
+            try {
+                await initAudio();
+                if (wasPlaying) {
+                    await bgMusic.play();
+                }
+            } catch (error) {
+                console.error('切换音乐失败：', error);
+                alert('切换音乐失败，请检查文件是否存在');
+                return;
+            }
+            
+            document.querySelectorAll('.music-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(musicId + 'Btn').classList.add('active');
+            
+            localStorage.setItem('selectedMusic', musicId);
+        }
+
+        function toggleSpeed() {
+            isHighSpeed = !isHighSpeed;
+            const speedControl = document.getElementById("speedControl");
+            const speedToggleBtn = document.getElementById("speedToggleBtn");
+            
+            if (isHighSpeed) {
+                speedControl.value = 50;
+                speedToggleBtn.textContent = "我要慢慢慢";
+                speedToggleBtn.style.background = "#ff4444";
+            } else {
+                speedControl.value = 2;
+                speedToggleBtn.textContent = "我要更快快快";
+                speedToggleBtn.style.background = "#2196F3";
+            }
+            updateSpeed();
+        }
+
+        function updateSpeed() {
+            rotationSpeed = document.getElementById("speedControl").value * 0.01;
+        }
+
+        async function loadSavedTextures() {
+            const savedLeft = localStorage.getItem("leftImage") || "Catoh.JPG";
+            const savedRight = localStorage.getItem("rightImage") || "Wee.WEBP";
+            const savedShape = localStorage.getItem("currentShape") || 'sphere';
+
+            const loadTexture = (url) => {
+                return new Promise((resolve, reject) => {
+                    new THREE.TextureLoader().load(
+                        url,
+                        resolve,
+                        undefined,
+                        reject
+                    );
+                });
+            };
+
+            try {
+                if (savedLeft) {
+                    const texture = await loadTexture(savedLeft);
+                    materialLeft.map = texture;
+                    materialLeft.needsUpdate = true;
+                    savedMaterials.sphere.left = texture;
+                    savedMaterials.ellipsoid.left = texture;
+                }
+                
+                if (savedRight) {
+                    const texture = await loadTexture(savedRight);
+                    materialRight.map = texture;
+                    materialRight.needsUpdate = true;
+                    savedMaterials.sphere.right = texture;
+                    savedMaterials.ellipsoid.right = texture;
+                }
+                
+                if (savedShape !== currentShape) {
+                    setShape(savedShape);
+                }
+            } catch (error) {
+                console.error('纹理加载失败：', error);
+                alert('图片加载失败，请检查文件是否存在');
+            }
+        }
+
+        async function handleImageUpload(event, material, storageKey) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const imageData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                const texture = await new Promise((resolve, reject) => {
+                    new THREE.TextureLoader().load(
+                        imageData,
+                        resolve,
+                        undefined,
+                        reject
+                    );
+                });
+
+                material.map = texture;
+                material.needsUpdate = true;
+                
+                if (material === materialLeft) {
+                    savedMaterials.sphere.left = texture;
+                    savedMaterials.ellipsoid.left = texture;
+                } else if (material === materialRight) {
+                    savedMaterials.sphere.right = texture;
+                    savedMaterials.ellipsoid.right = texture;
+                }
+
+                localStorage.setItem(storageKey, imageData);
+                localStorage.setItem("currentShape", currentShape);
+            } catch (error) {
+                console.error('图片上传失败：', error);
+                alert('图片上传失败，请检查文件格式');
+            }
+        }
+
+        function setShape(shapeType) {
+            currentShape = shapeType;
+            createShape(shapeType);
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+            const container = document.getElementById('canvas-container');
+            container.classList.remove('fullscreen');
+            handleResize();
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById('canvas-container');
+            
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.msFullscreenElement) {
+                
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+                
+                container.classList.add('fullscreen');
+                
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            } else {
+                exitFullscreen();
+            }
+        }
+
+        function handleFullscreenChange() {
+            const container = document.getElementById('canvas-container');
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.msFullscreenElement) {
+                
+                container.classList.remove('fullscreen');
+                handleResize();
+            }
+        }
+
+        function showDownloadDialog() {
+            if (window.innerWidth <= 726) {
+                alert('不支援手機用戶下載');
+                return;
+            }
+            document.getElementById('downloadDialog').style.display = 'flex';
+        }
+        
+        function hideDialog(dialogId) {
+            document.getElementById(dialogId).style.display = 'none';
+        }
+        
+        async function startRecording() {
+            if (window.innerWidth <= 726) {
+                alert('不支援手機用戶下載');
+                hideDialog('downloadDialog');
+                return;
+            }
+            
+            hideDialog('downloadDialog');
+            document.getElementById('downloadingDialog').style.display = 'flex';
+            document.getElementById('downloadingDialog').querySelector('h3').textContent = '錄製中請稍後...';
+
+            try {
+                // 创建临时画布
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = renderer.domElement.width;
+                tempCanvas.height = renderer.domElement.height;
+                
+                // 初始化音频上下文
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioDestination = audioContext.createMediaStreamDestination();
+
+                // 设置音频源
+                const audioElement = new Audio(musicList[currentMusic].src);
+                audioElement.loop = true;
+                audioElement.volume = 0.5;
+                
+                const audioSource = audioContext.createMediaElementSource(audioElement);
+                audioSource.connect(audioDestination);
+                
+                // 获取画布流
+                const canvasStream = tempCanvas.captureStream(RECORD_FPS);
+                
+                // 合并音频和视频流
+                const tracks = [
+                    ...canvasStream.getVideoTracks(),
+                    ...audioDestination.stream.getAudioTracks()
+                ];
+                const combinedStream = new MediaStream(tracks);
+                
+                // 配置 MediaRecorder
+                const options = {
+                    mimeType: 'video/webm;codecs=vp8,opus',
+                    videoBitsPerSecond: 5000000,
+                    audioBitsPerSecond: 128000
+                };
+                
+                mediaRecorder = new MediaRecorder(combinedStream, options);
+                recordedChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    // 停止所有轨道
+                    tracks.forEach(track => track.stop());
+                    
+                    // 关闭音频上下文
+                    if (audioContext) {
+                        await audioContext.close();
+                        audioContext = null;
+                    }
+                    
+                    // 创建视频 Blob
+                    const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                    currentVideoBlob = recordedBlob;
+                    
+                    // 更新 UI
+                    hideDialog('downloadingDialog');
+                    const previewVideo = document.getElementById('previewVideo');
+                    previewVideo.src = URL.createObjectURL(currentVideoBlob);
+                    document.getElementById('previewDialog').style.display = 'flex';
+                    
+                    // 停止背景音乐
+                    if (bgMusic) {
+                        bgMusic.pause();
+                    }
+                };
+                
+                // 开始录制
+                mediaRecorder.start(1000);
+                recordingFrames = 0;
+                isRecording = true;
+                
+                // 播放音频
+                await audioElement.play();
+                
+                // 确保动画在录制时运行
+                if (!isRotating) {
+                    isRotating = true;
+                    scene.rotation.y = 0;
+                }
+                
+                // 设置录制时长
+                setTimeout(() => {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        audioElement.pause();
+                        audioElement.currentTime = 0;
+                        isRotating = false;
+                        isRecording = false;
+                    }
+                }, RECORD_DURATION * 1000);
+                
+            } catch (error) {
+                console.error('录制失败：', error);
+                alert('录制失败，请检查浏览器设置或重试');
+                hideDialog('downloadingDialog');
+                isRecording = false;
+            }
+        }
+
+        async function downloadVideo() {
+            if (window.innerWidth <= 726) {
+                alert('不支援手機用戶下載');
+                hideDialog('previewDialog');
+                return;
+            }
+            
+            if (!currentVideoBlob) {
+                alert('没有可下载的视频');
+                return;
+            }
+            
+            try {
+                const url = URL.createObjectURL(currentVideoBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'rc123456dr_51121popipo.mp4';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                hideDialog('previewDialog');
+                document.getElementById('thankDialog').style.display = 'flex';
+                
+                if (bgMusic) {
+                    bgMusic.pause();
+                }
+            } catch (error) {
+                console.error('下载失败：', error);
+                alert('下载失败，请重试');
+            }
+        }
+
+        function handleResize() {
+            const container = document.getElementById('canvas-container');
+            const isMobileView = window.innerWidth <= 726;
+            
+            if (isMobileView) {
+                const newWidth = Math.min(container.clientWidth, 400);
+                const newHeight = newWidth;
+                renderer.setSize(newWidth, newHeight);
+                camera.aspect = 1;
+            } else {
+                renderer.setSize(400, 400);
+                camera.aspect = 1;
+            }
+            
+            camera.updateProjectionMatrix();
+            updateDownloadButtonState();
+        }
+
+        function updateDownloadButtonState() {
+            const downloadButton = document.querySelector('.download-button');
+            const previewDownloadButton = document.querySelector('#previewDialog button');
+            const isMobileView = window.innerWidth <= 726;
+            
+            const buttonStyle = {
+                backgroundColor: isMobileView ? '#cccccc' : '#4CAF50',
+                cursor: isMobileView ? 'not-allowed' : 'pointer',
+                opacity: isMobileView ? '0.7' : '1'
+            };
+            
+            Object.assign(downloadButton.style, buttonStyle);
+            
+            if (previewDownloadButton) {
+                Object.assign(previewDownloadButton.style, buttonStyle);
+            }
+        }
+
+        // 添加事件监听器
+        document.getElementById("uploadLeft").addEventListener("change", (event) => 
+            handleImageUpload(event, materialLeft, "leftImage"));
+        
+        document.getElementById("uploadRight").addEventListener("change", (event) => 
+            handleImageUpload(event, materialRight, "rightImage"));
+        
+        // 加载保存的音乐选择
+        window.addEventListener('load', () => {
+            const savedMusic = localStorage.getItem('selectedMusic');
+            if (savedMusic && musicList[savedMusic]) {
+                changeMusic(savedMusic);
+            }
+        });
+        
+        // 监听窗口大小变化
+        window.addEventListener('resize', () => {
+            if (document.fullscreenElement) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+            }
+            updateDownloadButtonState();
+        });
+    </script>
+</body>
+</html>
