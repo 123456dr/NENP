@@ -408,6 +408,30 @@
                 fill: #999;
             }
         }
+
+        .cloud-save-button {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #2196F3;
+            margin: 10px auto;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .cloud-save-button:hover {
+            background: #1976D2;
+        }
+        
+        .cloud-save-button svg {
+            width: 14px;
+            height: 14px;
+            fill: white;
+        }
     </style>
 </head>
 <body>
@@ -475,6 +499,13 @@ NO ERROR NO PAIN</h1>
                 </svg>
                 下載短影片
             </button>
+
+            <button onclick="startCloudRecording()" class="cloud-save-button">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                </svg>
+                儲存至雲端
+            </button>
             
             <div class="image-upload">
                 <label>上傳左半部圖片: <input type="file" id="uploadLeft" accept="image/*"></label>
@@ -506,6 +537,15 @@ NO ERROR NO PAIN</h1>
         <div class="dialog-box">
             <h3>下載中請稍後...</h3>
             <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <div class="dialog-overlay" id="macErrorDialog">
+        <div class="dialog-box">
+            <h3>看起來是無緣ㄌ(不支援mac</h3>
+            <div class="dialog-buttons">
+                <button onclick="hideDialog('macErrorDialog')">確定</button>
+            </div>
         </div>
     </div>
 
@@ -551,11 +591,13 @@ NO ERROR NO PAIN</h1>
         let recordingFrames = 0;
         const RECORD_FPS = 30;
         const RECORD_DURATION = 10; // 10秒
+        const MAC_ERROR_DURATION = 11; // 11秒时显示mac错误
         let mediaRecorder = null;
         let audioContext = null;
         let audioDestination = null;
         let recordedChunks = [];
         let currentVideoBlob = null;
+        let recordingStartTime = 0;
         
         init();
         animate();
@@ -721,8 +763,8 @@ NO ERROR NO PAIN</h1>
         }
 
         function loadSavedTextures() {
-            const savedLeft = localStorage.getItem("leftImage") || "Catoh.JPG";
-            const savedRight = localStorage.getItem("rightImage") || "Wee.WEBP";
+            const savedLeft = localStorage.getItem("leftImage") || "Catoh.jpg";
+            const savedRight = localStorage.getItem("rightImage") || "Wee.jpg";
             //const savedLeft = localStorage.getItem("leftImage");
             //const savedRight = localStorage.getItem("rightImage");
             const savedShape = localStorage.getItem("currentShape") || 'sphere';
@@ -980,9 +1022,28 @@ NO ERROR NO PAIN</h1>
             mediaRecorder = new MediaRecorder(combinedStream, options);
             
             recordedChunks = [];
+            recordingStartTime = Date.now();
             mediaRecorder.ondataavailable = (event) => {
                 if (event.data.size > 0) {
                     recordedChunks.push(event.data);
+                }
+                
+                // 检查录制时间
+                const currentTime = Date.now();
+                const recordingDuration = (currentTime - recordingStartTime) / 1000;
+                
+                if (recordingDuration > MAC_ERROR_DURATION) {
+                    if (mediaRecorder && mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                        audioElement.pause();
+                        audioElement.currentTime = 0;
+                        isRotating = false;
+                        
+                        // 显示mac错误对话框
+                        hideDialog('downloadingDialog');
+                        document.getElementById('macErrorDialog').style.display = 'flex';
+                        recordedChunks = []; // 清空已录制的数据
+                    }
                 }
             };
             
@@ -1082,6 +1143,7 @@ NO ERROR NO PAIN</h1>
         
         function updateDownloadButtonState() {
             const downloadButton = document.querySelector('.download-button');
+            const cloudSaveButton = document.querySelector('.cloud-save-button');
             const previewDownloadButton = document.querySelector('#previewDialog button');
             const isMobileView = window.innerWidth <= 726;
             
@@ -1094,15 +1156,160 @@ NO ERROR NO PAIN</h1>
                     previewDownloadButton.style.cursor = 'not-allowed';
                     previewDownloadButton.style.opacity = '0.7';
                 }
+                if (cloudSaveButton) {
+                    cloudSaveButton.style.backgroundColor = '#2196F3';
+                    cloudSaveButton.style.cursor = 'pointer';
+                    cloudSaveButton.style.opacity = '1';
+                }
             } else {
                 downloadButton.style.backgroundColor = '#4CAF50';
                 downloadButton.style.cursor = 'pointer';
                 downloadButton.style.opacity = '1';
+                if (cloudSaveButton) {
+                    cloudSaveButton.style.backgroundColor = '#2196F3';
+                    cloudSaveButton.style.cursor = 'pointer';
+                    cloudSaveButton.style.opacity = '1';
+                }
                 if (previewDownloadButton) {
                     previewDownloadButton.style.backgroundColor = '#4CAF50';
                     previewDownloadButton.style.cursor = 'pointer';
                     previewDownloadButton.style.opacity = '1';
                 }
+            }
+        }
+
+        async function startCloudRecording() {
+            try {
+                // 開始錄製前的準備
+                hideDialog('downloadDialog');
+                document.getElementById('downloadingDialog').style.display = 'flex';
+                document.getElementById('downloadingDialog').querySelector('h3').textContent = '錄製中請稍後...';
+
+                // 設置錄製選項
+                const canvas = renderer.domElement;
+                
+                // 創建臨時畫布來處理水印
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                
+                // 使用 CCapture.js 進行錄製，針對移動設備優化設置
+                const capturer = new CCapture({
+                    format: 'webm',
+                    framerate: 30,
+                    verbose: false,
+                    display: false,
+                    quality: 85,
+                    name: 'NENP_51121popipo'
+                });
+
+                // 修改 animate 函數來處理錄製
+                const originalAnimate = animate;
+                animate = function() {
+                    requestAnimationFrame(animate);
+                    
+                    if (isRotating) {
+                        scene.rotation.y += rotationSpeed;
+                    }
+                    
+                    renderer.render(scene, camera);
+                    
+                    // 在臨時畫布上繪製場景
+                    tempCtx.drawImage(canvas, 0, 0);
+                    
+                    // 添加水印
+                    tempCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    tempCtx.fillRect(tempCanvas.width - 100, tempCanvas.height - 40, 90, 30);
+                    tempCtx.fillStyle = 'white';
+                    tempCtx.font = 'bold 12px Arial';
+                    tempCtx.textAlign = 'center';
+                    tempCtx.textBaseline = 'middle';
+                    tempCtx.fillText('Made by NENP', tempCanvas.width - 55, tempCanvas.height - 25);
+                    
+                    capturer.capture(tempCanvas);
+                };
+
+                // 開始錄製
+                capturer.start();
+                
+                if (!isRotating) {
+                    isRotating = true;
+                    scene.rotation.y = 0;
+                }
+
+                // 10秒後停止錄製
+                setTimeout(async () => {
+                    capturer.stop();
+                    isRotating = false;
+                    
+                    // 恢復原始的 animate 函數
+                    animate = originalAnimate;
+                    
+                    // 處理錄製的數據
+                    capturer.save(async (blob) => {
+                        try {
+                            // 顯示預覽
+                            const previewVideo = document.getElementById('previewVideo');
+                            const videoUrl = URL.createObjectURL(blob);
+                            previewVideo.src = videoUrl;
+                            hideDialog('downloadingDialog');
+                            document.getElementById('previewDialog').style.display = 'flex';
+
+                            // 修改預覽對話框的按鈕
+                            const previewDialog = document.getElementById('previewDialog');
+                            const buttons = previewDialog.querySelector('.dialog-buttons');
+                            buttons.innerHTML = `
+                                <button onclick="saveToCloud()">儲存影片</button>
+                                <button onclick="hideDialog('previewDialog')">取消</button>
+                            `;
+                        } catch (error) {
+                            console.error('預覽生成失敗:', error);
+                            alert('預覽生成失敗，請重試');
+                            hideDialog('downloadingDialog');
+                        }
+                    });
+                }, RECORD_DURATION * 1000);
+
+            } catch (error) {
+                console.error('錄製失敗:', error);
+                alert('錄製失敗 天選之人(歡迎來訊合作解決orz');
+                alert('也可以手動螢幕錄製(其實');
+                hideDialog('downloadingDialog');
+            }
+        }
+
+        async function saveToCloud() {
+            try {
+                const previewVideo = document.getElementById('previewVideo');
+                const videoBlob = await fetch(previewVideo.src).then(r => r.blob());
+                
+                // 創建下載連結
+                const url = URL.createObjectURL(videoBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'NENP_51121popipo.webm';
+                
+                // 針對不同設備的處理
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    // 移動設備：直接打開URL
+                    window.location.href = url;
+                } else {
+                    // 桌面設備：使用下載連結
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+                
+                URL.revokeObjectURL(url);
+                hideDialog('previewDialog');
+                document.getElementById('thankDialog').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('保存失敗:', error);
+                alert('保存失敗，請重試');
             }
         }
     </script>
