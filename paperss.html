@@ -3,8 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>隨機運算計算機</title>
+    <title>剪刀石頭布遊戲</title>
     <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .system-response {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5vh;
+            padding: 3vh;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 1000px;
+        }
+
+        .system-choice {
+            width: clamp(120px, 15vw, 200px);
+            height: clamp(120px, 15vw, 200px);
+            object-fit: contain;
+        }
+
+        .system-character {
+            width: clamp(100px, 12vw, 180px);
+            height: clamp(100px, 12vw, 180px);
+            margin-left: 3vw;
+            object-fit: contain;
+        }
+
+        .player-choices {
+            display: flex;
+            gap: clamp(20px, 5vw, 60px);
+            justify-content: center;
+            width: 90%;
+            max-width: 1000px;
+        }
+
+        .choice-img {
+            width: clamp(120px, 15vw, 200px);
+            height: clamp(120px, 15vw, 200px);
+            cursor: pointer;
+            transition: transform 0.3s;
+            object-fit: contain;
+        }
+
+        .choice-img:hover {
+            transform: scale(1.15);
+        }
+
+        @media (max-width: 600px) {
+            .system-response {
+                padding: 2vh;
+                margin-bottom: 3vh;
+            }
+
+            .player-choices {
+                gap: 3vw;
+            }
+        }
         body { font-family: Arial, sans-serif; text-align: center; }
         input, button { margin: 10px; padding: 10px; font-size: 16px; }
         #log { margin-top: 20px; text-align: left; display: inline-block; }
@@ -29,7 +96,7 @@
         body {
             font-family: Arial, sans-serif;
             min-height: 100vh;
-            background-color: #90EE90;
+            background-color: #f0f0f0;
             padding-top: 60px; /* 為固定導航欄留出空間 */
         }
 
@@ -124,41 +191,10 @@
             position: relative;
             z-index: 1;
         }
-
-        /* 模態框樣式 */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-        }
-
-        .modal-content {
-            margin: auto;
-            display: block;
-            max-width: 80%;
-            max-height: 80%;
-            position: relative;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .close {
-            position: absolute;
-            right: 25px;
-            top: 15px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
+    
     <header class="header">
         <div class="hamburger" onclick="toggleMenu()">
             <span></span>
@@ -181,41 +217,45 @@
 NO ERROR NO PAIN</h1>
     </header>
 
-    <!-- 添加模態框結構 -->
-    <div id="imageModal" class="modal">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <img class="modal-content" id="modalImage">
-    </div>
-
-    <h2>GGTE Green is Good To Eye</h2>
     <script>
         function toggleMenu() {
             const menuOverlay = document.querySelector('.menu-overlay');
             menuOverlay.classList.toggle('active');
         }
-
-        // 顯示模態框的函數
-        function showModal() {
-            const modal = document.getElementById('imageModal');
-            const modalImg = document.getElementById('modalImage');
-            modal.style.display = "block";
-            modalImg.src = "ggte.jpg";
-        }
-
-        // 關閉模態框的函數
-        function closeModal() {
-            const modal = document.getElementById('imageModal');
-            modal.style.display = "none";
-        }
-
-        // 當網頁載入完成時顯示圖片
-        window.onload = function() {
-            showModal();
-        }
     </script>
+
+
+    <div class="system-response">
+        <img id="systemChoice" class="system-choice" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rock/3D/rock_3d.png" alt="系統選擇">
+        <img class="system-character" src="duck.jpg" alt="系統角色">
+    </div>
     
+    <div class="player-choices">
+        <img class="choice-img" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Scissors/3D/scissors_3d.png" alt="剪刀" onmouseover="updateSystemChoice('rock')" onmouseout="resetSystemChoice()">
+        <img class="choice-img" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rock/3D/rock_3d.png" alt="石頭" onmouseover="updateSystemChoice('paper')" onmouseout="resetSystemChoice()">
+        <img class="choice-img" src="https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Roll%20of%20paper/3D/roll_of_paper_3d.png" alt="布" onmouseover="updateSystemChoice('scissors')" onmouseout="resetSystemChoice()">
+    </div>
+
     <script>
-        
+        function updateSystemChoice(choice) {
+            const systemChoice = document.getElementById('systemChoice');
+            switch(choice) {
+                case 'rock':
+                    systemChoice.src = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rock/3D/rock_3d.png';
+                    break;
+                case 'paper':
+                    systemChoice.src = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Roll%20of%20paper/3D/roll_of_paper_3d.png';
+                    break;
+                case 'scissors':
+                    systemChoice.src = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Scissors/3D/scissors_3d.png';
+                    break;
+            }
+        }
+
+        function resetSystemChoice() {
+            const systemChoice = document.getElementById('systemChoice');
+            systemChoice.src = 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Rock/3D/rock_3d.png';
+        }
     </script>
 </body>
 </html>
