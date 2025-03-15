@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小球反彈遊戲</title>
+<style>
+body {
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+margin: 0;
+background-color: #f0f0f0;
+flex-direction: column;
+        }
+canvas {
+border: 2px solid black;
+        }
+#score {
+position: absolute;
+top: 10px;
+left: 10px;
+font-size: 20px;
+color: black;
+        }
+#speedControl {
+position: absolute;
+top: 40px;
+left: 10px;
+width: 150px;
+        }
+#speedValue {
+position: absolute;
+top: 60px;
+left: 170px;
+font-size: 16px;
+color: black;
+        }
+#restartBtn {
+margin-top: 20px;
+padding: 10px 20px;
+font-size: 18px;
+background-color: green;
+color: white;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+        }
+#restartBtn:hover {
+background-color: darkgreen;
+        }
+</style>
+</head>
+<body>
+
+
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+<div id="score">分數: 0</div>
+<input type="range" id="speedControl" min="1" max="10" value="5" step="0.5">
+<div id="speedValue">速度: 5</div>
+<button id="restartBtn" style="display: none;" onclick="restartGame()">重新開始</button>
+
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const scoreElement = document.getElementById("score");
+const restartBtn = document.getElementById("restartBtn");
+const speedControl = document.getElementById("speedControl");
+const speedValue = document.getElementById("speedValue");
+
+// 音效系統設置
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let utterance = new SpeechSynthesisUtterance("oh");
+utterance.lang = 'en-US';
+utterance.volume = 1;
+utterance.pitch = 1;
+utterance.rate = 1;
+
+// 播放音效函數
+function playOhSound() {
+    window.speechSynthesis.speak(utterance);
+}
+
+// 初始遊戲設置
+let ball, platform, score, gameOver, rightPressed, leftPressed;
+let baseSpeed = 5;
+
+
+// 速度控制事件
+speedControl.addEventListener("input", function(e) {
+    baseSpeed = parseFloat(e.target.value);
+    speedValue.textContent = `速度: ${baseSpeed}`;
+    if (!gameOver) {
+        // 保持當前球的方向，但改變速度
+        const currentAngle = Math.atan2(ball.dy, ball.dx);
+        const speed = baseSpeed;
+        ball.dx = speed * Math.cos(currentAngle);
+        ball.dy = speed * Math.sin(currentAngle);
+    }
+});
+
+function getRandomAngle() {
+    // 生成-45度到45度之間的隨機角度
+    return (Math.random() * 90 - 45) * Math.PI / 180;
+}
+
+function initializeGame() {
+    // 生成隨機初始角度
+    const initialAngle = getRandomAngle();
+    const speed = baseSpeed;
+
+    // 小球設置
+    ball = {
+        x: 400,
+        y: 300,
+        radius: 20,
+        dx: speed * Math.cos(initialAngle),
+        dy: speed * Math.sin(initialAngle),
+        color: "red"
+    };
+
+    // 平台設置
+    platform = {
+        width: 100,
+        height: 20,
+        x: 350,
+        y: 550,
+        dx: 7,
+        color: "green"
+    };
+
+    score = 0;
+    gameOver = false;
+    rightPressed = false;
+    leftPressed = false;
+
+    // 顯示分數
+    scoreElement.innerText = `分數: ${score}`;
+    restartBtn.style.display = "none";
+}
+
+// 觸控控制
+canvas.addEventListener("touchstart", handleTouchStart, false);
+canvas.addEventListener("touchmove", handleTouchMove, false);
+canvas.addEventListener("touchend", handleTouchEnd, false);
+
+let touchX = null;
+
+function handleTouchStart(e) {
+    e.preventDefault();
+    touchX = e.touches[0].clientX;
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!touchX) return;
+
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - touchX;
+
+    if (diff > 0) {
+        rightPressed = true;
+        leftPressed = false;
+    } else if (diff < 0) {
+        leftPressed = true;
+        rightPressed = false;
+    }
+
+    touchX = currentX;
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    rightPressed = false;
+    leftPressed = false;
+    touchX = null;
+}
+
+// 控制平台的移動
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+
+function keyDownHandler(e) {
+    if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = true;
+    } else if (e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = true;
+    }
+}
+
+function keyUpHandler(e) {
+    if (e.key === "Right" || e.key === "ArrowRight") {
+        rightPressed = false;
+    } else if (e.key === "Left" || e.key === "ArrowLeft") {
+        leftPressed = false;
+    }
+}
+
+// 繪製小球
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = ball.color;
+    ctx.fill();
+    ctx.closePath();
+}
+
+// 繪製平台
+function drawPlatform() {
+    ctx.beginPath();
+    ctx.rect(platform.x, platform.y, platform.width, platform.height);
+    ctx.fillStyle = platform.color;
+    ctx.fill();
+    ctx.closePath();
+}
+
+// 繪製分數
+function drawScore() {
+    scoreElement.innerText = `分數: ${score}`;
+}
+
+// 繪製遊戲結束訊息
+function drawGameOver() {
+    ctx.font = "30px Arial";
+    ctx.fillStyle = "red";
+    ctx.fillText("遊戲結束", 350, 300);
+    ctx.font = "20px Arial";
+    ctx.fillText(`最終得分: ${score}`, 350, 330);
+}
+
+// 更新小球的位置和碰撞邏輯
+function moveBall() {
+    // 水平邊界碰撞
+    if (ball.x + ball.dx > canvas.width - ball.radius || ball.x + ball.dx < ball.radius) {
+        ball.dx = -ball.dx;
+    }
+    
+    // 頂部碰撞
+    if (ball.y + ball.dy < ball.radius) {
+        ball.dy = -ball.dy;
+    } else if (ball.y + ball.dy > canvas.height - ball.radius) {
+        // 檢查小球是否與平台碰撞
+        if (ball.x > platform.x && ball.x < platform.x + platform.width && ball.y + ball.radius <= platform.y + 1) {
+            // 播放"oh"音效
+            playOhSound();
+            
+            // 計算撞擊點相對於平台中心的位置
+            const platformCenter = platform.x + platform.width / 2;
+            const hitPosition = ball.x - platformCenter;
+            
+            // 根據撞擊位置計算反射角度（-60度到60度）
+            const maxBounceAngle = Math.PI / 3; // 60度
+            const bounceAngle = (hitPosition / (platform.width / 2)) * maxBounceAngle;
+            
+            // 設定反彈後的速度
+            const speed = baseSpeed;
+            ball.dx = speed * Math.sin(bounceAngle);
+            ball.dy = -speed * Math.cos(bounceAngle);
+            
+            // 確保小球不會卡在平台內
+            ball.y = platform.y - ball.radius;
+            
+            score++;
+        } else {
+            gameOver = true;
+        }
+    }
+
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+}
+
+// 更新平台的位置
+function movePlatform() {
+    if (rightPressed && platform.x < canvas.width - platform.width) {
+        platform.x += platform.dx;
+    } else if (leftPressed && platform.x > 0) {
+        platform.x -= platform.dx;
+    }
+}
+
+// 更新遊戲畫面
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawBall();
+    drawPlatform();
+    drawScore();  // 顯示分數
+
+    if (gameOver) {
+        drawGameOver();  // 顯示遊戲結束訊息
+        restartBtn.style.display = "block";  // 顯示重新開始按鈕
+        return;  // 結束遊戲
+    }
+
+    moveBall();
+    movePlatform();
+
+    requestAnimationFrame(draw);
+}
+
+// 重新開始遊戲
+function restartGame() {
+    initializeGame();  // 初始化遊戲
+    draw();  // 重新開始遊戲畫面
+}
+
+// 開始遊戲
+initializeGame();
+draw();
+</script>
+
+
+</body>
+</html>

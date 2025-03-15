@@ -7,21 +7,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/CCapture.js/1.1.0/CCapture.all.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body { 
             margin: 0;
             text-align: center; 
             font-family: Arial, sans-serif; 
-            background: #f0f0f0;
-            min-height: 100vh;
-            padding-top: 60px;
+            background: #f0f0f0; 
         }
-
         .container { 
             display: flex; 
             justify-content: center; 
@@ -29,9 +20,7 @@
             gap: 20px; 
             padding: 20px;
             flex-wrap: wrap;
-            transition: all 0.3s ease-in-out;
         }
-
         #canvas-container {
             width: 400px;
             height: 400px;
@@ -39,9 +28,7 @@
             background: #fff;
             border-radius: 4px;
             position: relative;
-            transition: all 0.3s ease-in-out;
         }
-
         .controls { 
             display: flex; 
             flex-direction: column; 
@@ -51,15 +38,18 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             min-width: 300px;
-            transition: all 0.3s ease-in-out;
         }
-
         .shape-controls {
             display: flex;
             gap: 10px;
             justify-content: center;
         }
-
+        .image-upload { 
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         button {
             padding: 8px 16px;
             border: none;
@@ -68,67 +58,57 @@
             color: white;
             cursor: pointer;
         }
-
         button:hover {
             background: #45a049;
         }
-
         button.active {
             background: #2E7D32;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
         }
-
         .music-controls {
             margin-top: 10px;
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
+        
         .music-buttons {
             display: flex;
             gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
         }
-
+        
         .music-button {
             padding: 6px 12px;
             background: #2196F3;
         }
-
+        
         .music-button.active {
             background: #1976D2;
         }
-
+        
         .speed-controls {
             display: flex;
             align-items: center;
             gap: 10px;
             margin: 10px 0;
         }
-
+        
         .speed-controls label {
             margin-right: 5px;
         }
-
+        
         .speed-controls input[type="range"] {
             flex: 1;
         }
-
+        
         .speed-button {
             padding: 4px 8px;
             font-size: 12px;
             background: #2196F3;
         }
-
-        .image-upload { 
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
+        
         .fullscreen-button {
             position: absolute;
             bottom: 10px;
@@ -143,17 +123,17 @@
             align-items: center;
             justify-content: center;
         }
-
+        
         .fullscreen-button:hover {
             background: rgba(0, 0, 0, 0.7);
         }
-
+        
         .fullscreen-button svg {
             width: 20px;
             height: 20px;
             fill: white;
         }
-
+        
         #canvas-container.fullscreen {
             width: 100% !important;
             height: 100% !important;
@@ -164,7 +144,7 @@
             border: none;
             border-radius: 0;
         }
-
+        
         .download-button {
             display: flex;
             align-items: center;
@@ -172,13 +152,13 @@
             background: #4CAF50;
             margin: 10px auto;
         }
-
+        
         .download-button svg {
             width: 16px;
             height: 16px;
             fill: white;
         }
-
+        
         .dialog-overlay {
             display: none;
             position: fixed;
@@ -191,7 +171,7 @@
             justify-content: center;
             align-items: center;
         }
-
+        
         .dialog-box {
             background: white;
             padding: 20px;
@@ -202,7 +182,7 @@
             max-height: 80vh;
             overflow: auto;
         }
-
+        
         .preview-video {
             max-width: 100%;
             max-height: 60vh;
@@ -210,14 +190,14 @@
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-
+        
         .dialog-buttons {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-top: 15px;
         }
-
+        
         .watermark {
             position: absolute;
             bottom: 40px;
@@ -232,7 +212,7 @@
             z-index: 1000;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
-
+        
         .loading-spinner {
             width: 40px;
             height: 40px;
@@ -243,97 +223,12 @@
             animation: spin 1s linear infinite;
         }
 
-        .header {
-            background-color: rgba(51, 51, 51, 0.95);
-            padding: 0.5rem;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 1000;
-            text-align: center;
-            height: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .header h1 {
-            color: white;
-            font-size: 1.2rem;
-            margin: 0;
-        }
-
-        .hamburger {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            cursor: pointer;
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            z-index: 9999;
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 8px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-
-        .hamburger span {
-            width: 100%;
-            height: 2px;
-            background-color: #ffffff;
-            border-radius: 2px;
-        }
-
-        .menu-overlay {
-            position: fixed;
-            top: 50px;
-            left: 0;
-            width: 0;
-            height: 0;
-            background-color: rgba(30, 30, 30, 0.95);
-            z-index: 998;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
-
-        .menu-overlay.active {
-            width: 200px;
-            height: auto;
-            max-height: calc(100vh - 50px);
-        }
-
-        .menu-items {
-            padding: 20px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .menu-items a {
-            display: block;
-            color: white;
-            text-decoration: none;
-            padding: 10px 0;
-            font-size: 16px;
-        }
-
-        .menu-overlay.active .menu-items {
-            opacity: 1;
-        }
-
-        .disabled-button {
-            background-color: #cccccc !important;
-            cursor: not-allowed !important;
-            opacity: 0.7;
-        }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
+      
         @media screen and (max-width: 726px) {
             .container {
                 flex-direction: column;
@@ -388,10 +283,118 @@
                 opacity: 0.7;
             }
         }
+   
+        .container, #canvas-container, .controls {
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .disabled-button {
+            background-color: #cccccc !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding-top: 60px; /* 為固定導航欄留出空間 */
+        }
+
+        .header {
+            background-color: rgba(51, 51, 51, 0.95);
+            padding: 0.5rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            text-align: center;
+            height: 50px; /* 固定高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.2rem;
+            margin: 0;
+        }
+
+        .hamburger {
+            width: 30px; /* 縮小漢堡按鈕 */
+            height: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            position: fixed;
+            top: 10px; /* 調整位置 */
+            left: 10px;
+            z-index: 9999;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px; /* 縮小內邊距 */
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger span {
+            width: 100%;
+            height: 2px; /* 縮小線條高度 */
+            background-color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 50px; /* 從導航欄下方開始 */
+            left: 0;
+            width: 0;
+            height: 0;
+            background-color: rgba(30, 30, 30, 0.95);
+            z-index: 998;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-overlay.active {
+            width: 200px; /* 縮小選單寬度 */
+            height: auto;
+            max-height: calc(100vh - 50px); /* 最大高度為視窗高度減去導航欄高度 */
+        }
+
+        .menu-items {
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .menu-items a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+
+        .menu-overlay.active .menu-items {
+            opacity: 1;
+        }
+
+        /* 主要內容區域的樣式 */
+        .main-content {
+            padding: 20px;
+            margin-top: 20px; /* 調整與導航欄的間距 */
+        }
     </style>
 </head>
 <body>
-    
     <header class="header">
         <div class="hamburger" onclick="toggleMenu()">
             <span></span>
@@ -418,7 +421,6 @@ NO ERROR NO PAIN</h1>
             menuOverlay.classList.toggle('active');
         }
     </script>
-
 
     <h2>51121BoBiBo</h2>
     <div class="container">
@@ -515,102 +517,80 @@ NO ERROR NO PAIN</h1>
             ellipsoid: { left: null, right: null }
         };
         
-        // 音乐配置
+        // 音樂
         const musicList = {
-            music1: {
-                src: 'Green Screen Spinning Cat Meme _ OIIAIOIIIAI Meme.mp3',
-                title: '音樂1'
-            },
-            music2: {
-                src: 'bo bi bo bi bo bo bi bo cat.mp3',
-                title: '音樂2'
-            }
+            music1: 'Green Screen Spinning Cat Meme _ OIIAIOIIIAI Meme.mp3',
+            music2: 'bo bi bo bi bo bo bi bo cat.mp3'
         };
         
         let currentMusic = 'music1';
-        let bgMusic = null;
+        let bgMusic = new Audio(musicList[currentMusic]);
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5; 
+        
         let isHighSpeed = false;  
         
         let capturer = null;
         let isRecording = false;
         let recordingFrames = 0;
         const RECORD_FPS = 30;
-        const RECORD_DURATION = 10;
+        const RECORD_DURATION = 10; // 10秒
         let mediaRecorder = null;
         let audioContext = null;
         let audioDestination = null;
         let recordedChunks = [];
         let currentVideoBlob = null;
         
-        // 初始化音频
-        function initAudio() {
-            if (bgMusic) {
-                bgMusic.pause();
-                bgMusic = null;
-            }
-            
-            bgMusic = new Audio(musicList[currentMusic].src);
-            bgMusic.loop = true;
-            bgMusic.volume = 0.5;
-            
-            bgMusic.addEventListener('error', (e) => {
-                console.error('音频加载错误：', e);
-                alert('音频加载失败，请检查文件是否存在');
-            });
-            
-            return new Promise((resolve, reject) => {
-                bgMusic.addEventListener('canplaythrough', resolve);
-                bgMusic.addEventListener('error', reject);
-            });
-        }
-        
         init();
         animate();
 
-        async function init() {
+        function init() {
+            
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xffffff);
+            scene.background = new THREE.Color(0xffffff);  // 白色背景
 
+            
             camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
             camera.position.z = 3;
 
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true,
-                preserveDrawingBuffer: true // 为录制视频必需
-            });
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(400, 400);
             const container = document.getElementById('canvas-container');
             container.appendChild(renderer.domElement);
 
-            // 水印
+            // 房東的水印
             const watermark = document.createElement('div');
             watermark.className = 'watermark';
-            watermark.textContent = 'Made by RC';
+            watermark.textContent = 'Made by NENP';
             container.appendChild(watermark);
 
-            // 初始化形状和材质
+            // 全屏點擊
+            container.addEventListener('click', function(e) {
+                if ((document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) && 
+                    !e.target.classList.contains('fullscreen-button')) {
+                    exitFullscreen();
+                }
+            });
+
             createShape('sphere');
-            await loadSavedTextures();
+            loadSavedTextures();
             
-            // 初始化音频
-            try {
-                await initAudio();
-            } catch (error) {
-                console.error('音频初始化失败：', error);
-            }
             
-            // 事件监听器
             window.addEventListener('resize', handleResize);
-            document.addEventListener('fullscreenchange', handleFullscreenChange);
-            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+            
             
             handleResize();
+            
+            
             updateDownloadButtonState();
+            
+        
+            window.addEventListener('resize', updateDownloadButtonState);
         }
 
         function createShape(shapeType) {
+            
             if (materialLeft && materialLeft.map) {
                 savedMaterials[currentShape].left = materialLeft.map;
             }
@@ -618,18 +598,22 @@ NO ERROR NO PAIN</h1>
                 savedMaterials[currentShape].right = materialRight.map;
             }
 
+            
             if (leftHalf) scene.remove(leftHalf);
             if (rightHalf) scene.remove(rightHalf);
 
+            
             let scaleX = shapeType === 'ellipsoid' ? 1.5 : 1;
             let scaleY = 1;
             let scaleZ = shapeType === 'ellipsoid' ? 0.8 : 1;
 
+            
             const geometryLeft = new THREE.SphereGeometry(1, 32, 32, 0, Math.PI);
             materialLeft = new THREE.MeshBasicMaterial({
                 side: THREE.DoubleSide,
                 color: 0xcccccc
             });
+            
             
             if (savedMaterials[shapeType].left) {
                 materialLeft.map = savedMaterials[shapeType].left;
@@ -640,11 +624,13 @@ NO ERROR NO PAIN</h1>
             leftHalf.scale.set(scaleX, scaleY, scaleZ);
             scene.add(leftHalf);
 
+            // 右半
             const geometryRight = new THREE.SphereGeometry(1, 32, 32, Math.PI, Math.PI);
             materialRight = new THREE.MeshBasicMaterial({
                 side: THREE.DoubleSide,
                 color: 0xcccccc
             });
+            
             
             if (savedMaterials[shapeType].right) {
                 materialRight.map = savedMaterials[shapeType].right;
@@ -655,8 +641,14 @@ NO ERROR NO PAIN</h1>
             rightHalf.scale.set(scaleX, scaleY, scaleZ);
             scene.add(rightHalf);
 
+            // 更新按鈕狀態
             document.getElementById('sphereBtn').classList.toggle('active', shapeType === 'sphere');
             document.getElementById('ellipsoidBtn').classList.toggle('active', shapeType === 'ellipsoid');
+        }
+
+        function setShape(shapeType) {
+            currentShape = shapeType;
+            createShape(shapeType);
         }
 
         function animate() {
@@ -668,8 +660,9 @@ NO ERROR NO PAIN</h1>
             
             renderer.render(scene, camera);
             
-            if (isRecording && mediaRecorder && mediaRecorder.state === 'recording') {
+            if (isRecording) {
                 recordingFrames++;
+                capturer.capture(renderer.domElement);
                 
                 if (recordingFrames >= RECORD_FPS * RECORD_DURATION) {
                     stopRecording();
@@ -677,43 +670,17 @@ NO ERROR NO PAIN</h1>
             }
         }
 
-        async function toggleRotation() {
+        function toggleRotation() {
             isRotating = !isRotating;
             
             if (isRotating) {
-                try {
-                    await bgMusic.play();
-                } catch (error) {
-                    console.error('音乐播放失败：', error);
-                    alert('音乐播放失败，请检查浏览器设置');
-                }
+                bgMusic.play().catch(function(error) {
+                    console.log("音樂播放失敗：", error);
+                });
             } else {
                 bgMusic.pause();
                 bgMusic.currentTime = 0;
             }
-        }
-
-        async function changeMusic(musicId) {
-            const wasPlaying = !bgMusic.paused;
-            currentMusic = musicId;
-            
-            try {
-                await initAudio();
-                if (wasPlaying) {
-                    await bgMusic.play();
-                }
-            } catch (error) {
-                console.error('切换音乐失败：', error);
-                alert('切换音乐失败，请检查文件是否存在');
-                return;
-            }
-            
-            document.querySelectorAll('.music-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById(musicId + 'Btn').classList.add('active');
-            
-            localStorage.setItem('selectedMusic', musicId);
         }
 
         function toggleSpeed() {
@@ -737,92 +704,110 @@ NO ERROR NO PAIN</h1>
             rotationSpeed = document.getElementById("speedControl").value * 0.01;
         }
 
-        async function loadSavedTextures() {
-            const savedLeft = localStorage.getItem("leftImage") || "Catoh.jpg";
-            const savedRight = localStorage.getItem("rightImage") || "Wee.jpg";
+        function loadSavedTextures() {
+            const savedLeft = localStorage.getItem("leftImage") || "Catoh.JPG";
+            const savedRight = localStorage.getItem("rightImage") || "Wee.WEBP";
+            //const savedLeft = localStorage.getItem("leftImage");
+            //const savedRight = localStorage.getItem("rightImage");
             const savedShape = localStorage.getItem("currentShape") || 'sphere';
 
-            const loadTexture = (url) => {
-                return new Promise((resolve, reject) => {
-                    new THREE.TextureLoader().load(
-                        url,
-                        resolve,
-                        undefined,
-                        reject
-                    );
-                });
-            };
-
-            try {
-                if (savedLeft) {
-                    const texture = await loadTexture(savedLeft);
-                    materialLeft.map = texture;
-                    materialLeft.needsUpdate = true;
-                    savedMaterials.sphere.left = texture;
-                    savedMaterials.ellipsoid.left = texture;
-                }
+            if (savedLeft) {
+                applyTexture(savedLeft, materialLeft);
                 
-                if (savedRight) {
-                    const texture = await loadTexture(savedRight);
-                    materialRight.map = texture;
-                    materialRight.needsUpdate = true;
-                    savedMaterials.sphere.right = texture;
-                    savedMaterials.ellipsoid.right = texture;
-                }
+                const texture = new THREE.TextureLoader().load(savedLeft);
+                savedMaterials.sphere.left = texture;
+                savedMaterials.ellipsoid.left = texture;
+            }
+            if (savedRight) {
+                applyTexture(savedRight, materialRight);
                 
-                if (savedShape !== currentShape) {
-                    setShape(savedShape);
-                }
-            } catch (error) {
-                console.error('纹理加载失败：', error);
-                alert('图片加载失败，请检查文件是否存在');
+                const texture = new THREE.TextureLoader().load(savedRight);
+                savedMaterials.sphere.right = texture;
+                savedMaterials.ellipsoid.right = texture;
+            }
+            
+            
+            if (savedShape !== currentShape) {
+                setShape(savedShape);
             }
         }
 
-        async function handleImageUpload(event, material, storageKey) {
+        function applyTexture(imageData, material) {
+            const texture = new THREE.TextureLoader().load(imageData);
+            material.map = texture;
+            material.needsUpdate = true;
+            
+            
+            if (material === materialLeft) {
+                savedMaterials.sphere.left = texture;
+                savedMaterials.ellipsoid.left = texture;
+            } else if (material === materialRight) {
+                savedMaterials.sphere.right = texture;
+                savedMaterials.ellipsoid.right = texture;
+            }
+        }
+
+        function handleImageUpload(event, material, storageKey) {
             const file = event.target.files[0];
-            if (!file) return;
-
-            try {
-                const imageData = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-
-                const texture = await new Promise((resolve, reject) => {
-                    new THREE.TextureLoader().load(
-                        imageData,
-                        resolve,
-                        undefined,
-                        reject
-                    );
-                });
-
-                material.map = texture;
-                material.needsUpdate = true;
-                
-                if (material === materialLeft) {
-                    savedMaterials.sphere.left = texture;
-                    savedMaterials.ellipsoid.left = texture;
-                } else if (material === materialRight) {
-                    savedMaterials.sphere.right = texture;
-                    savedMaterials.ellipsoid.right = texture;
-                }
-
-                localStorage.setItem(storageKey, imageData);
-                localStorage.setItem("currentShape", currentShape);
-            } catch (error) {
-                console.error('图片上传失败：', error);
-                alert('图片上传失败，请检查文件格式');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageData = e.target.result;
+                    applyTexture(imageData, material);
+                    localStorage.setItem(storageKey, imageData);
+                    // 保存當前形狀
+                    localStorage.setItem("currentShape", currentShape);
+                };
+                reader.readAsDataURL(file);
             }
         }
 
-        function setShape(shapeType) {
-            currentShape = shapeType;
-            createShape(shapeType);
+        document.getElementById("uploadLeft").addEventListener("change", function(event) {
+            handleImageUpload(event, materialLeft, "leftImage");
+        });
+
+        document.getElementById("uploadRight").addEventListener("change", function(event) {
+            handleImageUpload(event, materialRight, "rightImage");
+        });
+
+        function changeMusic(musicId) {
+            // 保存當前播放狀態
+            const wasPlaying = !bgMusic.paused;
+            
+            // 停止當前音樂
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+            
+            // 更新當前音樂
+            currentMusic = musicId;
+            bgMusic = new Audio(musicList[musicId]);
+            bgMusic.loop = true;
+            bgMusic.volume = 0.5;
+            
+            // 如果之前在播放，則繼續播放新音樂
+            if (wasPlaying) {
+                bgMusic.play().catch(function(error) {
+                    console.log("音樂播放失敗：", error);
+                });
+            }
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.music-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(musicId + 'Btn').classList.add('active');
+            
+            // 保存音樂選擇
+            localStorage.setItem('selectedMusic', musicId);
         }
+
+        // 載入保存的音樂選擇
+        window.addEventListener('load', function() {
+            const savedMusic = localStorage.getItem('selectedMusic');
+            if (savedMusic && musicList[savedMusic]) {
+                changeMusic(savedMusic);
+            }
+        });
 
         function exitFullscreen() {
             if (document.exitFullscreen) {
@@ -842,11 +827,8 @@ NO ERROR NO PAIN</h1>
         function toggleFullscreen() {
             const container = document.getElementById('canvas-container');
             
-            if (!document.fullscreenElement && 
-                !document.webkitFullscreenElement && 
-                !document.mozFullScreenElement && 
-                !document.msFullscreenElement) {
-                
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
+                // 進入全螢幕
                 if (container.requestFullscreen) {
                     container.requestFullscreen();
                 } else if (container.webkitRequestFullscreen) {
@@ -856,9 +838,9 @@ NO ERROR NO PAIN</h1>
                 } else if (container.msRequestFullscreen) {
                     container.msRequestFullscreen();
                 }
-                
                 container.classList.add('fullscreen');
                 
+                // 調整渲染器大小為全螢幕
                 const width = window.innerWidth;
                 const height = window.innerHeight;
                 renderer.setSize(width, height);
@@ -868,20 +850,31 @@ NO ERROR NO PAIN</h1>
                 exitFullscreen();
             }
         }
+        
+        // 監聽全螢幕變化
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
         function handleFullscreenChange() {
             const container = document.getElementById('canvas-container');
-            if (!document.fullscreenElement && 
-                !document.webkitFullscreenElement && 
-                !document.mozFullScreenElement && 
-                !document.msFullscreenElement) {
-                
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && !document.msFullscreenElement) {
                 container.classList.remove('fullscreen');
                 handleResize();
             }
         }
+        
+        // 監聽視窗大小變化
+        window.addEventListener('resize', function() {
+            if (document.fullscreenElement) {
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
 
         function showDownloadDialog() {
+            
             if (window.innerWidth <= 726) {
                 alert('不支援手機用戶下載');
                 return;
@@ -893,7 +886,8 @@ NO ERROR NO PAIN</h1>
             document.getElementById(dialogId).style.display = 'none';
         }
         
-        async function startRecording() {
+        function startRecording() {
+            
             if (window.innerWidth <= 726) {
                 alert('不支援手機用戶下載');
                 hideDialog('downloadDialog');
@@ -904,142 +898,140 @@ NO ERROR NO PAIN</h1>
             document.getElementById('downloadingDialog').style.display = 'flex';
             document.getElementById('downloadingDialog').querySelector('h3').textContent = '錄製中請稍後...';
 
-            try {
-                // 创建临时画布
-                const tempCanvas = document.createElement('canvas');
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCanvas.width = renderer.domElement.width;
-                tempCanvas.height = renderer.domElement.height;
-                
-                // 初始化音频上下文
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                audioDestination = audioContext.createMediaStreamDestination();
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = renderer.domElement.width;
+            tempCanvas.height = renderer.domElement.height;
+            
+            
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioDestination = audioContext.createMediaStreamDestination();
 
-                // 设置音频源
-                const audioElement = new Audio(musicList[currentMusic].src);
-                audioElement.loop = true;
-                audioElement.volume = 0.5;
+            
+            const audioElement = new Audio(musicList[currentMusic]);
+            audioElement.loop = true;
+            audioElement.volume = 0.5;
+            
+        
+            const audioSource = audioContext.createMediaElementSource(audioElement);
+            audioSource.connect(audioDestination);
+            
+       
+            const originalAnimate = animate;
+            animate = function() {
+                requestAnimationFrame(animate);
                 
-                const audioSource = audioContext.createMediaElementSource(audioElement);
-                audioSource.connect(audioDestination);
-                
-                // 获取画布流
-                const canvasStream = tempCanvas.captureStream(RECORD_FPS);
-                
-                // 合并音频和视频流
-                const tracks = [
-                    ...canvasStream.getVideoTracks(),
-                    ...audioDestination.stream.getAudioTracks()
-                ];
-                const combinedStream = new MediaStream(tracks);
-                
-                // 配置 MediaRecorder
-                const options = {
-                    mimeType: 'video/webm;codecs=vp8,opus',
-                    videoBitsPerSecond: 5000000,
-                    audioBitsPerSecond: 128000
-                };
-                
-                mediaRecorder = new MediaRecorder(combinedStream, options);
-                recordedChunks = [];
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
-                    }
-                };
-                
-                mediaRecorder.onstop = async () => {
-                    // 停止所有轨道
-                    tracks.forEach(track => track.stop());
-                    
-                    // 关闭音频上下文
-                    if (audioContext) {
-                        await audioContext.close();
-                        audioContext = null;
-                    }
-                    
-                    // 创建视频 Blob
-                    const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
-                    currentVideoBlob = recordedBlob;
-                    
-                    // 更新 UI
-                    hideDialog('downloadingDialog');
-                    const previewVideo = document.getElementById('previewVideo');
-                    previewVideo.src = URL.createObjectURL(currentVideoBlob);
-                    document.getElementById('previewDialog').style.display = 'flex';
-                    
-                    // 停止背景音乐
-                    if (bgMusic) {
-                        bgMusic.pause();
-                    }
-                };
-                
-                // 开始录制
-                mediaRecorder.start(1000);
-                recordingFrames = 0;
-                isRecording = true;
-                
-                // 播放音频
-                await audioElement.play();
-                
-                // 确保动画在录制时运行
-                if (!isRotating) {
-                    isRotating = true;
-                    scene.rotation.y = 0;
+                if (isRotating) {
+                    scene.rotation.y += rotationSpeed;
                 }
                 
-                // 设置录制时长
-                setTimeout(() => {
-                    if (mediaRecorder && mediaRecorder.state === 'recording') {
-                        mediaRecorder.stop();
-                        audioElement.pause();
-                        audioElement.currentTime = 0;
-                        isRotating = false;
-                        isRecording = false;
-                    }
-                }, RECORD_DURATION * 1000);
+                renderer.render(scene, camera);
                 
-            } catch (error) {
-                console.error('录制失败：', error);
-                alert('录制失败，请检查浏览器设置或重试');
+         
+                tempCtx.drawImage(renderer.domElement, 0, 0);
+                
+                // 繪製水印
+                tempCtx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                tempCtx.fillRect(tempCanvas.width - 100, tempCanvas.height - 40, 90, 30);
+                tempCtx.fillStyle = 'white';
+                tempCtx.font = 'bold 12px Arial';
+                tempCtx.textAlign = 'center';
+                tempCtx.textBaseline = 'middle';
+                tempCtx.fillText('Made by NENP', tempCanvas.width - 55, tempCanvas.height - 25);
+            };
+            
+            
+            const canvasStream = tempCanvas.captureStream(RECORD_FPS);
+            
+            // 合併音和視
+            const tracks = [...canvasStream.getVideoTracks(), ...audioDestination.stream.getAudioTracks()];
+            const combinedStream = new MediaStream(tracks);
+            
+            // 創建 MediaRecorder
+            let options = {
+                mimeType: 'video/webm;codecs=vp8,opus',
+                videoBitsPerSecond: 5000000,
+                audioBitsPerSecond: 128000
+            };
+            
+            mediaRecorder = new MediaRecorder(combinedStream, options);
+            
+            recordedChunks = [];
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+            
+            mediaRecorder.onstop = async () => {
+                // 恢復原始的 animate 函數
+                animate = originalAnimate;
+
+                const recordedBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                currentVideoBlob = recordedBlob;
+                
+                // 關閉音頻上下文
+                audioContext.close();
+                
+                // 隱藏下載中對話框
                 hideDialog('downloadingDialog');
-                isRecording = false;
+                
+                // 顯示預覽
+                const previewVideo = document.getElementById('previewVideo');
+                previewVideo.src = URL.createObjectURL(currentVideoBlob);
+                document.getElementById('previewDialog').style.display = 'flex';
+                bgMusic.pause();
+            };
+            
+            // 開始錄製
+            mediaRecorder.start(1000);
+            
+            // 確保音頻播放
+            audioElement.currentTime = 0;
+            audioElement.play().catch(function(error) {
+                console.log("音樂播放失敗：", error);
+            });
+            
+            // 確保動畫在錄製時運行
+            if (!isRotating) {
+                isRotating = true;
+                scene.rotation.y = 0;
             }
+            
+            // 設置定時器在10秒後停止錄製
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                    audioElement.pause();
+                    audioElement.currentTime = 0;
+                    isRotating = false;
+                }
+            }, RECORD_DURATION * 1000);
         }
 
-        async function downloadVideo() {
+        function downloadVideo() {
+            
             if (window.innerWidth <= 726) {
                 alert('不支援手機用戶下載');
                 hideDialog('previewDialog');
                 return;
             }
             
-            if (!currentVideoBlob) {
-                alert('没有可下载的视频');
-                return;
-            }
+            if (!currentVideoBlob) return;
             
-            try {
-                const url = URL.createObjectURL(currentVideoBlob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'rc123456dr_51121popipo.mp4';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                hideDialog('previewDialog');
-                document.getElementById('thankDialog').style.display = 'flex';
-                
-                if (bgMusic) {
-                    bgMusic.pause();
-                }
-            } catch (error) {
-                console.error('下载失败：', error);
-                alert('下载失败，请重试');
-            }
+            const url = URL.createObjectURL(currentVideoBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'NENP_51121popipo.mp4';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            hideDialog('previewDialog');
+            document.getElementById('thankDialog').style.display = 'flex';
+            bgMusic.pause();
         }
 
         function handleResize() {
@@ -1047,61 +1039,50 @@ NO ERROR NO PAIN</h1>
             const isMobileView = window.innerWidth <= 726;
             
             if (isMobileView) {
+                
                 const newWidth = Math.min(container.clientWidth, 400);
-                const newHeight = newWidth;
+                const newHeight = newWidth; // 保持正方形
+                
+                
                 renderer.setSize(newWidth, newHeight);
+                
+                
                 camera.aspect = 1;
+                camera.updateProjectionMatrix();
             } else {
+                
                 renderer.setSize(400, 400);
                 camera.aspect = 1;
+                camera.updateProjectionMatrix();
             }
-            
-            camera.updateProjectionMatrix();
-            updateDownloadButtonState();
         }
 
+        
         function updateDownloadButtonState() {
             const downloadButton = document.querySelector('.download-button');
             const previewDownloadButton = document.querySelector('#previewDialog button');
             const isMobileView = window.innerWidth <= 726;
             
-            const buttonStyle = {
-                backgroundColor: isMobileView ? '#cccccc' : '#4CAF50',
-                cursor: isMobileView ? 'not-allowed' : 'pointer',
-                opacity: isMobileView ? '0.7' : '1'
-            };
-            
-            Object.assign(downloadButton.style, buttonStyle);
-            
-            if (previewDownloadButton) {
-                Object.assign(previewDownloadButton.style, buttonStyle);
+            if (isMobileView) {
+                downloadButton.style.backgroundColor = '#cccccc';
+                downloadButton.style.cursor = 'not-allowed';
+                downloadButton.style.opacity = '0.7';
+                if (previewDownloadButton) {
+                    previewDownloadButton.style.backgroundColor = '#cccccc';
+                    previewDownloadButton.style.cursor = 'not-allowed';
+                    previewDownloadButton.style.opacity = '0.7';
+                }
+            } else {
+                downloadButton.style.backgroundColor = '#4CAF50';
+                downloadButton.style.cursor = 'pointer';
+                downloadButton.style.opacity = '1';
+                if (previewDownloadButton) {
+                    previewDownloadButton.style.backgroundColor = '#4CAF50';
+                    previewDownloadButton.style.cursor = 'pointer';
+                    previewDownloadButton.style.opacity = '1';
+                }
             }
         }
-
-        // 添加事件监听器
-        document.getElementById("uploadLeft").addEventListener("change", (event) => 
-            handleImageUpload(event, materialLeft, "leftImage"));
-        
-        document.getElementById("uploadRight").addEventListener("change", (event) => 
-            handleImageUpload(event, materialRight, "rightImage"));
-        
-        // 加载保存的音乐选择
-        window.addEventListener('load', () => {
-            const savedMusic = localStorage.getItem('selectedMusic');
-            if (savedMusic && musicList[savedMusic]) {
-                changeMusic(savedMusic);
-            }
-        });
-        
-        // 监听窗口大小变化
-        window.addEventListener('resize', () => {
-            if (document.fullscreenElement) {
-                renderer.setSize(window.innerWidth, window.innerHeight);
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-            }
-            updateDownloadButtonState();
-        });
     </script>
 </body>
 </html>
