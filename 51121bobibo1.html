@@ -1168,12 +1168,6 @@ NO ERROR NO PAIN</h1>
         }
 
         async function startCloudRecording() {
-            // 檢查瀏覽器支援
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert('您的瀏覽器不支援錄製功能');
-                return;
-            }
-
             try {
                 // 開始錄製前的準備
                 hideDialog('downloadDialog');
@@ -1191,10 +1185,13 @@ NO ERROR NO PAIN</h1>
                 const canvas = renderer.domElement;
                 const stream = canvas.captureStream(30);
 
-                // 獲取音頻流
-                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const audioTrack = audioStream.getAudioTracks()[0];
-                stream.addTrack(audioTrack);
+                // 創建音頻源並連接到目標
+                const audioSource = audioContext.createMediaElementSource(audioElement);
+                const audioDestination = audioContext.createMediaStreamDestination();
+                audioSource.connect(audioDestination);
+                
+                // 添加音頻軌道到流中
+                stream.addTrack(audioDestination.stream.getAudioTracks()[0]);
 
                 // 創建 MediaRecorder
                 const recorder = new MediaRecorder(stream, {
@@ -1218,7 +1215,7 @@ NO ERROR NO PAIN</h1>
                     audioElement.pause();
                     audioElement.currentTime = 0;
                     isRotating = false;
-                    audioTrack.stop();
+                    audioContext.close();
                 }, RECORD_DURATION * 1000);
 
                 // 處理錄製數據
@@ -1245,7 +1242,7 @@ NO ERROR NO PAIN</h1>
 
             } catch (error) {
                 console.error('錄製失敗:', error);
-                alert('錄製失敗，請確認已允許存取麥克風權限');
+                alert('錄製失敗，請重試');
                 hideDialog('downloadingDialog');
             }
         }
