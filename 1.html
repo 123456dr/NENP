@@ -20,6 +20,8 @@
         background-color: #ffffff;
         position: relative;
         left: 100px; /* 向右移動 150px */
+        max-width: 80vw;
+        max-height: 80vh;
         }
 
         #score {
@@ -301,7 +303,28 @@
             platform.x -= platform.dx;
         }
     }
+    function resizeCanvas() {
+    const aspectRatio = 1000 / 800; // 原始寬高比
+    let newWidth = window.innerWidth * 0.95; // 畫布寬度佔視窗的 95%
+    let newHeight = newWidth / aspectRatio;
 
+    // 確保畫布不超過視窗高度
+    if (newHeight > window.innerHeight * 0.95) {
+        newHeight = window.innerHeight * 0.95;
+        newWidth = newHeight * aspectRatio;
+    }
+
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+
+    // 根據新尺寸縮放內容
+    ctx.setTransform(canvas.width / 1000, 0, 0, canvas.height / 800, 0, 0);
+}
+
+// 在頁面載入和視窗大小改變時呼叫
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas(); // 初始化時呼叫
+ㄈ
     function draw() {
     if (paused) {  // 如果遊戲暫停，只顯示暫停畫面
         ctx.font = "40px Arial";
